@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图库管理 - VisionDetectPlatform</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .gallery-controls {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .btn-delete {
+            background-color: #f44336;
+        }
+        .btn-delete:hover {
+            background-color: #d32f2f;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .gallery-item {
+            background-color: white;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .gallery-item:hover {
+            transform: translateY(-5px);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .item-info {
+            padding: 15px;
+        }
+        .item-info h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        .item-info p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .item-actions {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 15px 15px;
+        }
+        .search-box {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>图库管理系统</h1>
+    </div>
+    
+    <div class="container">
+        <div class="gallery-controls">
+            <div>
+                <button class="btn">上传图片</button>
+                <button class="btn btn-delete">批量删除</button>
+            </div>
+            <div>
+                <input type="text" class="search-box" placeholder="搜索图片...">
+                <select class="search-box">
+                    <option>全部分类</option>
+                    <option>检测结果</option>
+                    <option>原始图像</option>
+                    <option>标注图像</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="gallery-grid">
+            <!-- 图片项示例 1 -->
+            <div class="gallery-item">
+                <img src="https://via.placeholder.com/300x200/4CAF50/white?text=Image+1" alt="检测图像1">
+                <div class="item-info">
+                    <h3>检测图像_001.jpg</h3>
+                    <p>上传时间: 2023-05-15 14:30</p>
+                    <p>分类: 检测结果</p>
+                </div>
+                <div class="item-actions">
+                    <button class="btn" style="font-size: 12px; padding: 5px 10px;">查看</button>
+                    <button class="btn btn-delete" style="font-size: 12px; padding: 5px 10px;">删除</button>
+                </div>
+            </div>
+            
+            <!-- 图片项示例 2 -->
+            <div class="gallery-item">
+                <img src="https://via.placeholder.com/300x200/2196F3/white?text=Image+2" alt="检测图像2">
+                <div class="item-info">
+                    <h3>检测图像_002.jpg</h3>
+                    <p>上传时间: 2023-05-15 15:45</p>
+                    <p>分类: 原始图像</p>
+                </div>
+                <div class="item-actions">
+                    <button class="btn" style="font-size: 12px; padding: 5px 10px;">查看</button>
+                    <button class="btn btn-delete" style="font-size: 12px; padding: 5px 10px;">删除</button>
+                </div>
+            </div>
+            
+            <!-- 图片项示例 3 -->
+            <div class="gallery-item">
+                <img src="https://via.placeholder.com/300x200/FF9800/white?text=Image+3" alt="检测图像3">
+                <div class="item-info">
+                    <h3>检测图像_003.jpg</h3>
+                    <p>上传时间: 2023-05-16 09:15</p>
+                    <p>分类: 标注图像</p>
+                </div>
+                <div class="item-actions">
+                    <button class="btn" style="font-size: 12px; padding: 5px 10px;">查看</button>
+                    <button class="btn btn-delete" style="font-size: 12px; padding: 5px 10px;">删除</button>
+                </div>
+            </div>
+            
+            <!-- 图片项示例 4 -->
+            <div class="gallery-item">
+                <img src="https://via.placeholder.com/300x200/9C27B0/white?text=Image+4" alt="检测图像4">
+                <div class="item-info">
+                    <h3>检测图像_004.jpg</h3>
+                    <p>上传时间: 2023-05-16 11:20</p>
+                    <p>分类: 检测结果</p>
+                </div>
+                <div class="item-actions">
+                    <button class="btn" style="font-size: 12px; padding: 5px 10px;">查看</button>
+                    <button class="btn btn-delete" style="font-size: 12px; padding: 5px 10px;">删除</button>
+                </div>
+            </div>
+            
+            <!-- 图片项示例 5 -->
+            <div class="gallery-item">
+                <img src="https://via.placeholder.com/300x200/E91E63/white?text=Image+5" alt="检测图像5">
+                <div class="item-info">
+                    <h3>检测图像_005.jpg</h3>
+                    <p>上传时间: 2023-05-17 13:45</p>
+                    <p>分类: 原始图像</p>
+                </div>
+                <div class="item-actions">
+                    <button class="btn" style="font-size: 12px; padding: 5px 10px;">查看</button>
+                    <button class="btn btn-delete" style="font-size: 12px; padding: 5px 10px;">删除</button>
+                </div>
+            </div>
+            
+            <!-- 图片项示例 6 -->
+            <div class="gallery-item">
+                <img src="https://via.placeholder.com/300x200/00BCD4/white?text=Image+6" alt="检测图像6">
+                <div class="item-info">
+                    <h3>检测图像_006.jpg</h3>
+                    <p>上传时间: 2023-05-17 16:30</p>
+                    <p>分类: 标注图像</p>
+                </div>
+                <div class="item-actions">
+                    <button class="btn" style="font-size: 12px; padding: 5px 10px;">查看</button>
+                    <button class="btn btn-delete" style="font-size: 12px; padding: 5px 10px;">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 简单的交互功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 删除按钮事件
+            const deleteButtons = document.querySelectorAll('.btn-delete');
+            deleteButtons.forEach(button => {
+                if (button.textContent === '删除') {
+                    button.addEventListener('click', function() {
+                        const item = this.closest('.gallery-item');
+                        if (confirm('确定要删除这张图片吗？')) {
+                            item.style.opacity = '0';
+                            setTimeout(() => {
+                                item.remove();
+                            }, 300);
+                        }
+                    });
+                }
+            });
+            
+            // 批量删除按钮事件
+            const bulkDeleteButton = document.querySelector('.btn-delete:not([style])');
+            if (bulkDeleteButton) {
+                bulkDeleteButton.addEventListener('click', function() {
+                    if (confirm('确定要批量删除选中的图片吗？')) {
+                        alert('批量删除功能已触发');
+                    }
+                });
+            }
+            
+            // 上传按钮事件
+            const uploadButton = document.querySelector('.btn');
+            if (uploadButton && uploadButton.textContent === '上传图片') {
+                uploadButton.addEventListener('click', function() {
+                    alert('上传功能已触发');
+                });
+            }
+            
+            // 查看按钮事件
+            const viewButtons = document.querySelectorAll('.btn');
+            viewButtons.forEach(button => {
+                if (button.textContent === '查看') {
+                    button.addEventListener('click', function() {
+                        alert('查看图片功能已触发');
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摄像头管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .camera-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .camera-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+        .camera-card:hover {
+            transform: translateY(-5px);
+        }
+        .camera-preview {
+            width: 100%;
+            height: 200px;
+            background-color: #000;
+            position: relative;
+            overflow: hidden;
+        }
+        .camera-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #777;
+        }
+        .camera-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .status-online {
+            background-color: #2ecc71;
+        }
+        .status-offline {
+            background-color: #e74c3c;
+        }
+        .camera-info {
+            padding: 15px;
+        }
+        .camera-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        .camera-location {
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 10px;
+        }
+        .pagination button {
+            background-color: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        .pagination button.active {
+            background-color: #3498db;
+            color: white;
+            border: 1px solid #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>摄像头管理系统</h1>
+            <div class="controls">
+                <button class="btn-primary" id="addCamera">添加摄像头</button>
+                <button class="btn-primary" id="refresh">刷新列表</button>
+            </div>
+        </header>
+
+        <div class="camera-grid" id="cameraGrid">
+            <!-- 摄像头卡片将通过JavaScript动态生成 -->
+        </div>
+
+        <div class="pagination">
+            <button class="active">1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>下一页</button>
+        </div>
+    </div>
+
+    <script>
+        // 模拟摄像头数据
+        const cameras = [
+            {
+                id: 1,
+                name: "主入口摄像头",
+                location: "办公楼大厅",
+                status: "online",
+                streamUrl: "https://example.com/stream1"
+            },
+            {
+                id: 2,
+                name: "停车场摄像头",
+                location: "地下停车场A区",
+                status: "online",
+                streamUrl: "https://example.com/stream2"
+            },
+            {
+                id: 3,
+                name: "仓库摄像头",
+                location: "一号仓库",
+                status: "offline",
+                streamUrl: "https://example.com/stream3"
+            },
+            {
+                id: 4,
+                name: "电梯摄像头",
+                location: "1号电梯",
+                status: "online",
+                streamUrl: "https://example.com/stream4"
+            }
+        ];
+
+        // 渲染摄像头列表
+        function renderCameras() {
+            const cameraGrid = document.getElementById('cameraGrid');
+            cameraGrid.innerHTML = '';
+
+            cameras.forEach(camera => {
+                const cameraCard = document.createElement('div');
+                cameraCard.className = 'camera-card';
+
+                cameraCard.innerHTML = `
+                    <div class="camera-preview">
+                        <div class="camera-placeholder">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4Z" stroke="#777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="12" cy="12" r="4" stroke="#777" stroke-width="2"/>
+                                <path d="M16.2426 7.75736L14.8284 9.17157L12 6.34315L9.17157 9.17157L7.75736 7.75736L10.5858 4.92893L12 6.34315L13.4142 4.92893L16.2426 7.75736Z" stroke="#777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>${camera.name}</span>
+                        </div>
+                        <div class="camera-status status-${camera.status}"></div>
+                    </div>
+                    <div class="camera-info">
+                        <div class="camera-name">${camera.name}</div>
+                        <div class="camera-location">${camera.location}</div>
+                        <div class="camera-controls">
+                            <button class="btn-primary" onclick="viewCamera(${camera.id})">查看</button>
+                            <button class="btn-primary" onclick="${camera.status === 'online' ? 'disableCamera' : 'enableCamera'}(${camera.id})">${camera.status === 'online' ? '禁用' : '启用'}</button>
+                        </div>
+                    </div>
+                `;
+
+                cameraGrid.appendChild(cameraCard);
+            });
+        }
+
+        // 查看摄像头
+        function viewCamera(id) {
+            alert(`查看摄像头 ${id}`);
+            // 这里可以实现打开摄像头实时画面的逻辑
+        }
+
+        // 启用摄像头
+        function enableCamera(id) {
+            const camera = cameras.find(c => c.id === id);
+            if (camera) {
+                camera.status = 'online';
+                renderCameras();
+                alert(`已启用摄像头 ${camera.name}`);
+            }
+        }
+
+        // 禁用摄像头
+        function disableCamera(id) {
+            const camera = cameras.find(c => c.id === id);
+            if (camera) {
+                camera.status = 'offline';
+                renderCameras();
+                alert(`已禁用摄像头 ${camera.name}`);
+            }
+        }
+
+        // 添加摄像头
+        document.getElementById('addCamera').addEventListener('click', function() {
+            alert('添加摄像头功能');
+            // 这里可以实现添加摄像头的逻辑
+        });
+
+        // 刷新列表
+        document.getElementById('refresh').addEventListener('click', function() {
+            renderCameras();
+            alert('已刷新摄像头列表');
+        });
+
+        // 初始化页面
+        window.onload = function() {
+            renderCameras();
+        };
+    </script>
+</body>
+</html>

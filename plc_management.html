@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLC管理系统</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .status-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .status-box {
+            flex: 1;
+            margin: 0 10px;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .status-running {
+            background-color: #e8f5e9;
+            border: 1px solid #4CAF50;
+        }
+        .status-stopped {
+            background-color: #ffebee;
+            border: 1px solid #f44336;
+        }
+        .control-panel {
+            background-color: #f1f8e9;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-start {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-stop {
+            background-color: #f44336;
+            color: white;
+        }
+        .btn-reset {
+            background-color: #ff9800;
+            color: white;
+        }
+        .monitoring-panel {
+            background-color: #e3f2fd;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #2196F3;
+            color: white;
+        }
+        .alarms-panel {
+            background-color: #fff3e0;
+            padding: 20px;
+            border-radius: 6px;
+        }
+        .alarm {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            background-color: #ffebee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PLC管理系统</h1>
+
+        <!-- 状态显示区域 -->
+        <div class="status-container">
+            <div class="status-box status-running">
+                <h2>PLC状态</h2>
+                <p style="font-size: 24px;">运行中</p>
+                <p>CPU负载: 45%</p>
+            </div>
+            <div class="status-box">
+                <h2>连接设备</h2>
+                <p style="font-size: 24px;">8/10</p>
+                <p>通信状态: 正常</p>
+            </div>
+            <div class="status-box status-stopped">
+                <h2>报警数量</h2>
+                <p style="font-size: 24px;">2</p>
+                <p>优先级: 高</p>
+            </div>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="control-panel">
+            <h2>设备控制</h2>
+            <button class="btn-start">启动系统</button>
+            <button class="btn-stop">停止系统</button>
+            <button class="btn-reset">重置PLC</button>
+            <button>手动模式</button>
+            <button>自动模式</button>
+            <button>紧急停止</button>
+        </div>
+
+        <!-- 监控数据 -->
+        <div class="monitoring-panel">
+            <h2>实时数据监控</h2>
+            <table>
+                <tr>
+                    <th>参数名称</th>
+                    <th>当前值</th>
+                    <th>单位</th>
+                    <th>阈值</th>
+                    <th>状态</th>
+                </tr>
+                <tr>
+                    <td>温度</td>
+                    <td>35.6</td>
+                    <td>°C</td>
+                    <td>0-60</td>
+                    <td>正常</td>
+                </tr>
+                <tr>
+                    <td>压力</td>
+                    <td>1.2</td>
+                    <td>MPa</td>
+                    <td>0-2</td>
+                    <td>正常</td>
+                </tr>
+                <tr>
+                    <td>流量</td>
+                    <td>45.8</td>
+                    <td>L/min</td>
+                    <td>20-50</td>
+                    <td>正常</td>
+                </tr>
+                <tr>
+                    <td>电压</td>
+                    <td>220.5</td>
+                    <td>V</td>
+                    <td>200-240</td>
+                    <td>正常</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 报警信息 -->
+        <div class="alarms-panel">
+            <h2>报警信息</h2>
+            <div class="alarm">
+                <p><strong>报警时间:</strong> 2023-10-20 14:35:22</p>
+                <p><strong>报警代码:</strong> E012</p>
+                <p><strong>报警描述:</strong> 传感器1信号丢失</p>
+                <p><strong>处理建议:</strong> 检查传感器连接</p>
+            </div>
+            <div class="alarm">
+                <p><strong>报警时间:</strong> 2023-10-20 14:30:15</p>
+                <p><strong>报警代码:</strong> W003</p>
+                <p><strong>报警描述:</strong> 温度接近阈值</p>
+                <p><strong>处理建议:</strong> 检查冷却系统</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 这里可以添加JavaScript代码来实现PLC数据的实时更新和控制功能
+        // 例如使用WebSocket连接到PLC系统
+
+        // 示例：模拟数据更新
+        function updateData() {
+            // 这里可以添加真实的数据获取逻辑
+            console.log("更新数据");
+        }
+
+        // 定时更新数据
+        setInterval(updateData, 5000);
+    </script>
+</body>
+</html>

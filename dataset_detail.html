@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据集详情 - 人脸识别数据集</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#4f46e5',
+                        accent: '#8b5cf6',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        info: '#3b82f6',
+                        dark: '#1e293b',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    },
+                },
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-hover {
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+            .card-hover:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            }
+            .fade-in {
+                animation: fadeIn 0.3s ease-in-out;
+            }
+            .gallery-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 1rem;
+            }
+            .gallery-item {
+                position: relative;
+                overflow: hidden;
+                border-radius: 0.5rem;
+                aspect-ratio: 1;
+            }
+            .gallery-item img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.3s ease;
+            }
+            .gallery-item:hover img {
+                transform: scale(1.05);
+            }
+            .gallery-overlay {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+                padding: 0.75rem;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .gallery-item:hover .gallery-overlay {
+                opacity: 1;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-dark">
+    <!-- 导航栏 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-database text-primary text-2xl"></i>
+                <h1 class="text-xl font-bold">数据集管理系统</h1>
+            </div>
+            
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="#" class="text-slate-600 hover:text-primary transition-colors">数据概览</a>
+                <a href="dataset_table_view.html" class="text-primary font-medium">数据集列表</a>
+                <a href="#" class="text-slate-600 hover:text-primary transition-colors">标注管理</a>
+                <a href="#" class="text-slate-600 hover:text-primary transition-colors">导入导出</a>
+                <a href="#" class="text-slate-600 hover:text-primary transition-colors">系统设置</a>
+            </nav>
+            
+            <div class="flex items-center space-x-3">
+                <button class="hidden md:flex items-center space-x-1 text-slate-600 hover:text-primary transition-colors">
+                    <i class="fa fa-bell-o"></i>
+                    <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+                <div class="relative">
+                    <img src="https://picsum.photos/id/1005/200/200" alt="用户头像" class="w-8 h-8 rounded-full object-cover border-2 border-primary">
+                </div>
+                <button class="md:hidden text-slate-700 text-xl">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+        <!-- 面包屑导航 -->
+        <div class="flex items-center text-sm text-slate-500 mb-6">
+            <a href="#" class="hover:text-primary transition-colors">首页</a>
+            <i class="fa fa-chevron-right mx-2 text-xs"></i>
+            <a href="dataset_table_view.html" class="hover:text-primary transition-colors">数据集列表</a>
+            <i class="fa fa-chevron-right mx-2 text-xs"></i>
+            <span class="text-slate-700">人脸识别数据集</span>
+        </div>
+
+        <!-- 页面标题和操作按钮 -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+            <div>
+                <h2 class="text-2xl font-bold">人脸识别数据集</h2>
+                <div class="flex items-center mt-2 space-x-2">
+                    <span class="text-sm text-slate-500">ID: DS-20230601-001</span>
+                    <span class="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-semibold rounded-full">已完成</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3 mt-4 md:mt-0">
+                <button class="px-4 py-2 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors flex items-center space-x-2">
+                    <i class="fa fa-download"></i>
+                    <span>导出数据</span>
+                </button>
+                <button class="px-4 py-2 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors flex items-center space-x-2">
+                    <i class="fa fa-pencil"></i>
+                    <span>编辑</span>
+                </button>
+                <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center space-x-2">
+                    <i class="fa fa-eye"></i>
+                    <span>浏览标注</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 数据集基本信息卡片 -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6 fade-in">
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- 左侧描述区域 -->
+                <div class="md:w-2/3">
+                    <h3 class="text-lg font-semibold mb-3">数据集描述</h3>
+                    <p class="text-slate-700 mb-4">
+                        这是一个高质量的人脸识别数据集，包含不同种族、年龄和性别的人脸图像，用于训练人脸识别和分析模型。数据集中的图像涵盖了各种光照条件、表情和姿态变化，确保模型具有良好的泛化能力。
+                    </p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <h4 class="text-sm font-medium text-slate-500 mb-1">创建时间</h4>
+                            <p class="text-slate-700">2023-06-01</p>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium text-slate-500 mb-1">更新时间</h4>
+                            <p class="text-slate-700">2023-06-28</p>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium text-slate-500 mb-1">创建人</h4>
+                            <p class="text-slate-700">张三</p>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium text-slate-500 mb-1">版本</h4>
+                            <p class="text-slate-700">v1.2.0</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-sm font-medium text-slate-500 mb-2">标签</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-blue-100 text-blue-600 text-xs px-3 py-1 rounded-full">人脸</span>
+                            <span class="bg-indigo-100 text-indigo-600 text-xs px-3 py-1 rounded-full">识别</span>
+                            <span class="bg-purple-100 text-purple-600 text-xs px-3 py-1 rounded-full">分类</span>
+                            <span class="bg-pink-100 text-pink-600 text-xs px-3 py-1 rounded-full">深度学习</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧统计区域 -->
+                <div class="md:w-1/3">
+                    <h3 class="text-lg font-semibold mb-3">数据集统计</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-50 p-4 rounded-lg">
+                            <p class="text-sm text-slate-500 mb-1">图片总数</p>
+                            <p class="text-2xl font-bold text-slate-700">2,548</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg">
+                            <p class="text-sm text-slate-500 mb-1">标注数量</p>
+                            <p class="text-2xl font-bold text-slate-700">2,548</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg">
+                            <p class="text-sm text-slate-500 mb-1">类别数</p>
+                            <p class="text-2xl font-bold text-slate-700">128</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg">
+                            <p class="text-sm text-slate-500 mb-1">完成率</p>
+                            <p class="text-2xl font-bold text-green-600">100%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 数据集内容预览 -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6 fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">数据集内容预览</h3>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-slate-500">显示前32张图片</span>
+                    <select class="text-sm border border-slate-200 rounded-lg p-1 focus:outline-none focus:ring-1 focus:ring-primary">
+                        <option>32张</option>
+                        <option>64张</option>
+                        <option>128张</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- 图片网格 -->
+            <div class="gallery-grid">
+                <!-- 示例图片 1-8 -->
+                <div class="gallery-item">
+                    <img src="https://picsum.photos/id/1001/300/300" alt="数据集图片">
+                    <div class="gallery-overlay">
+                        <p class="text-white text-xs">face_0001.jpg</p>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://picsum.photos/id/1002/300/300" alt="数据集图片">
+                    <div class="gallery-overlay">
+                        <p class="text-white text-xs">face_0002.jpg</p>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://picsum.photos/id/1003/300/300" alt="数据集图片">
+                    <div class="gallery-overlay">
+                        <p class="text-white text-xs">face_0003.jpg</p>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://picsum.photos/id/1004/300/300" alt="数据集图片">
+                    <div class="gallery-overlay">
+                        <p class="text-white text-xs">face_0004.jpg</p>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://picsum.photos/id/1005/300/300" alt="数据集图片">
+                    <div class="gallery-overlay">
+                        <p class="text-white text-xs">face_0005.jpg</p>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://picsum.photos/id/1006/300/300" alt="数据集图片">
+                    <div class="gallery-overlay">
+                        <p class="text-white text-xs">face_0006.jpg</p>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://picsum.photos/id/1009/300/300" alt="数据集图片">
+                    <div class="gallery-overlay">
+                        <p class="text-white text-xs">face_0007.jpg</p>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://picsum.photos/id/1012/300/300" alt="数据集图片">
+                    <div class="gallery-overlay">
+                        <p class="text-white text-xs">face_0008.jpg</p>
+                    </div>
+                </div>
+                
+                <!-- 更多图片占位符 -->
+                <div class="gallery-item">
+                    <img src="https://picsum.photos/id/1027/300/300" alt="数据集图片">
+                    <div class="gallery-overlay">
+                        <p class="text-white text-xs">face_0009.jpg</p>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://picsum.photos/id/1074/300/300" alt="数据集图片">
+                    <div class="gallery-overlay">
+                        <p class="text-white text-xs">face_0010.jpg</p>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://picsum.photos/id/1062/300/300" alt="数据集图片">
+                    <div class="gallery-overlay">
+                        <p class="text-white text-xs">face_0011.jpg</p>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="https://picsum.photos/id/1072/300/300" alt="数据集图片">
+                    <div class="gallery-overlay">
+                        <p class="text-white text-xs">face_0012.jpg</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 查看更多按钮 -->
+            <div class="mt-6 text-center">
+                <button class="px-6 py-2 border border-primary text-primary rounded-lg hover:bg-primary/5 transition-colors">
+                    查看更多图片
+                </button>
+            </div>
+        </div>
+
+        <!-- 数据集元数据和历史记录 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- 元数据卡片 -->
+            <div class="bg-white rounded-xl shadow-sm p-6 fade-in">
+                <h3 class="text-lg font-semibold mb-4">数据集元数据</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between pb-2 border-b border-slate-100">
+                        <span class="text-sm text-slate-500">数据格式</span>
+                        <span class="text-sm text-slate-700">JPG, JSON</span>
+                    </div>
+                    <div class="flex justify-between pb-2 border-b border-slate-100">
+                        <span class="text-sm text-slate-500">平均分辨率</span>
+                        <span class="text-sm text-slate-700">1024 × 768</span>
+                    </div>
+                    <div class="flex justify-between pb-2 border-b border-slate-100">
+                        <span class="text-sm text-slate-500">数据大小</span>
+                        <span class="text-sm text-slate-700">1.2 GB</span>
+                    </div>
+                    <div class="flex justify-between pb-2 border-b border-slate-100">
+                        <span class="text-sm text-slate-500">标注格式</span>
+                        <span class="text-sm text-slate-700">COCO, YOLO</span>
+                    </div>
+                    <div class="flex justify-between pb-2 border-b border-slate-100">
+                        <span class="text-sm text-slate-500">存储位置</span>
+                        <span class="text-sm text-slate-700">本地存储</span>
+                    </div>
+                    <div class="flex justify-between pb-2 border-b border-slate-100">
+                        <span class="text-sm text-slate-500">许可证</span>
+                        <span class="text-sm text-slate-700">MIT</span>
+                    </div>
+                </div>
+                
+                <button class="w-full mt-4 px-4 py-2 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors text-sm">
+                    查看完整元数据
+                </button>
+            </div>
+            
+            <!-- 历史记录卡片 -->
+            <div class="bg-white rounded-xl shadow-sm p-6 fade-in">
+                <h3 class="text-lg font-semibold mb-4">数据集历史记录</h3>
+                <div class="space-y-4">
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fa fa-check text-green-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">标注完成</p>
+                            <p class="text-xs text-slate-500 mt-1">所有图像标注已完成审核</p>
+                            <p class="text-xs text-slate-400 mt-2">2023-06-28 14:30:25</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fa fa-upload text-blue-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">数据更新</p>
+                            <p class="text-xs text-slate-500 mt-1">新增300张图像和标注数据</p>
+                            <p class="text-xs text-slate-400 mt-2">2023-06-15 09:15:42</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fa fa-edit text-purple-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">标注开始</p>
+                            <p class="text-xs text-slate-500 mt-1">标注团队开始对数据集进行标注</p>
+                            <p class="text-xs text-slate-400 mt-2">2023-06-05 11:00:00</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fa fa-plus text-amber-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">数据集创建</p>
+                            <p class="text-xs text-slate-500 mt-1">创建初始数据集并上传基础图像</p>
+                            <p class="text-xs text-slate-400 mt-2">2023-06-01 16:45:30</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="w-full mt-4 px-4 py-2 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors text-sm">
+                    查看完整历史记录
+                </button>
+            </div>
+        </div>
+
+        <!-- 相关数据集推荐 -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6 fade-in">
+            <h3 class="text-lg font-semibold mb-4">相关数据集</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <!-- 相关数据集 1 -->
+                <div class="border border-slate-200 rounded-lg p-4 card-hover">
+                    <div class="flex items-center mb-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-md flex items-center justify-center mr-3">
+                            <i class="fa fa-smile-o text-primary"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-sm">表情识别数据集</h4>
+                            <p class="text-xs text-slate-500 mt-0.5">1,200 张图片</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-600 mb-3 line-clamp-2">包含不同表情的人脸图像数据集，用于训练表情识别模型。</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs px-2 py-0.5 bg-green-100 text-green-800 rounded-full">已完成</span>
+                        <button class="text-xs text-primary">查看</button>
+                    </div>
+                </div>
+                
+                <!-- 相关数据集 2 -->
+                <div class="border border-slate-200 rounded-lg p-4 card-hover">
+                    <div class="flex items-center mb-3">
+                        <div class="w-10 h-10 bg-purple-100 rounded-md flex items-center justify-center mr-3">
+                            <i class="fa fa-users text-accent"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-sm">人群分析数据集</h4>
+                            <p class="text-xs text-slate-500 mt-0.5">3,500 张图片</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-600 mb-3 line-clamp-2">包含不同场景下的人群图像，用于人流量统计和行为分析。</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full">进行中</span>
+                        <button class="text-xs text-primary">查看</button>
+                    </div>
+                </div>
+                
+                <!-- 相关数据集 3 -->
+                <div class="border border-slate-200 rounded-lg p-4 card-hover">
+                    <div class="flex items-center mb-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-md flex items-center justify-center mr-3">
+                            <i class="fa fa-id-card-o text-success"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-sm">人脸识别验证集</h4>
+                            <p class="text-xs text-slate-500 mt-0.5">800 张图片</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-600 mb-3 line-clamp-2">独立的人脸验证数据集，用于测试模型的泛化能力。</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs px-2 py-0.5 bg-green-100 text-green-800 rounded-full">已完成</span>
+                        <button class="text-xs text-primary">查看</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-8 mt-12">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center space-x-2 mb-4 md:mb-0">
+                    <i class="fa fa-database text-primary text-2xl"></i>
+                    <h2 class="text-xl font-bold">数据集管理系统</h2>
+                </div>
+                
+                <div class="flex space-x-6">
+                    <a href="#" class="text-slate-300 hover:text-white transition-colors">
+                        <i class="fa fa-github text-xl"></i>
+                    </a>
+                    <a href="#" class="text-slate-300 hover:text-white transition-colors">
+                        <i class="fa fa-twitter text-xl"></i>
+                    </a>
+                    <a href="#" class="text-slate-300 hover:text-white transition-colors">
+                        <i class="fa fa-linkedin text-xl"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-slate-700 text-center text-slate-400 text-sm">
+                <p>© 2023 数据集管理系统. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 简单脚本用于演示 -->
+    <script>
+        // 导航栏滚动效果
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 10) {
+                header.classList.add('py-2', 'shadow');
+                header.classList.remove('py-3', 'shadow-sm');
+            } else {
+                header.classList.add('py-3', 'shadow-sm');
+                header.classList.remove('py-2', 'shadow');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片数据集管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#4f46e5',
+                        accent: '#8b5cf6',
+                        dark: '#1e293b',
+                        light: '#f8fafc',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    },
+                },
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-transition {
+                transition: all 0.3s ease;
+            }
+            .grid-masonry {
+                grid-template-rows: masonry;
+            }
+            .scale-hover {
+                transition: transform 0.3s ease;
+            }
+            .scale-hover:hover {
+                transform: scale(1.03);
+            }
+            .opacity-hover {
+                transition: opacity 0.3s ease;
+            }
+            .image-zoom-container {
+                overflow: hidden;
+                position: relative;
+            }
+            .image-zoom {
+                transition: transform 0.5s ease;
+            }
+            .image-zoom-container:hover .image-zoom {
+                transform: scale(1.05);
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-dark">
+    <!-- 导航栏 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-picture-o text-primary text-2xl"></i>
+                <h1 class="text-xl font-bold text-dark">图片数据集管理系统</h1>
+            </div>
+            
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="#" class="text-primary font-medium">数据概览</a>
+                <a href="#" class="text-slate-600 hover:text-primary transition-colors">数据集管理</a>
+                <a href="#" class="text-slate-600 hover:text-primary transition-colors">模型训练</a>
+                <a href="#" class="text-slate-600 hover:text-primary transition-colors">标注工具</a>
+                <a href="#" class="text-slate-600 hover:text-primary transition-colors">使用指南</a>
+            </nav>
+            
+            <div class="flex items-center space-x-3">
+                <button class="hidden md:block px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center space-x-2">
+                    <i class="fa fa-upload"></i>
+                    <span>上传图片</span>
+                </button>
+                <button class="md:hidden text-slate-700 text-xl">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <div class="relative">
+                    <img src="https://picsum.photos/id/1005/200/200" alt="用户头像" class="w-8 h-8 rounded-full object-cover border-2 border-primary">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+        <!-- 数据集概览卡片 -->
+        <section class="mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white rounded-xl shadow-card p-5 card-transition hover:shadow-card-hover scale-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-500 text-sm">总图片数</p>
+                            <h3 class="text-2xl font-bold mt-1" id="totalImages">2,457</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-primary">
+                            <i class="fa fa-images text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-4 text-sm">
+                        <span class="text-green-500 flex items-center"><i class="fa fa-arrow-up mr-1"></i> 12.5%</span>
+                        <span class="text-slate-400 ml-2">较上月</span>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-card p-5 card-transition hover:shadow-card-hover scale-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-500 text-sm">已标注图片</p>
+                            <h3 class="text-2xl font-bold mt-1" id="labeledImages">1,893</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-accent">
+                            <i class="fa fa-tag text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-4 text-sm">
+                        <span class="text-green-500 flex items-center"><i class="fa fa-arrow-up mr-1"></i> 8.2%</span>
+                        <span class="text-slate-400 ml-2">较上月</span>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-card p-5 card-transition hover:shadow-card-hover scale-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-500 text-sm">数据集数量</p>
+                            <h3 class="text-2xl font-bold mt-1" id="datasetCount">12</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-secondary">
+                            <i class="fa fa-folder-open text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-4 text-sm">
+                        <span class="text-green-500 flex items-center"><i class="fa fa-arrow-up mr-1"></i> 2</span>
+                        <span class="text-slate-400 ml-2">新增数据集</span>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-card p-5 card-transition hover:shadow-card-hover scale-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-slate-500 text-sm">平均标注质量</p>
+                            <h3 class="text-2xl font-bold mt-1" id="avgQuality">94.6%</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-500">
+                            <i class="fa fa-check-circle text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-4 text-sm">
+                        <span class="text-green-500 flex items-center"><i class="fa fa-arrow-up mr-1"></i> 1.8%</span>
+                        <span class="text-slate-400 ml-2">较上月</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 搜索和筛选区域 -->
+        <section class="mb-8 bg-white rounded-xl shadow-sm p-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center space-x-4 flex-1">
+                    <div class="relative flex-1">
+                        <input type="text" placeholder="搜索图片名称、标签或ID..." 
+                               class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                        <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                    </div>
+                    
+                    <div class="relative">
+                        <select class="appearance-none pl-4 pr-10 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white">
+                            <option>所有数据集</option>
+                            <option>人脸识别</option>
+                            <option>物体检测</option>
+                            <option>图像分割</option>
+                            <option>场景识别</option>
+                        </select>
+                        <i class="fa fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <button class="px-4 py-2 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors flex items-center space-x-2">
+                        <i class="fa fa-filter"></i>
+                        <span>筛选</span>
+                    </button>
+                    
+                    <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center space-x-2">
+                        <i class="fa fa-plus"></i>
+                        <span>创建数据集</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 标签筛选 -->
+            <div class="mt-5 flex flex-wrap gap-2">
+                <span class="text-sm text-slate-500 flex items-center mr-2">标签筛选:</span>
+                <button class="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm hover:bg-primary/20 transition-colors">
+                    全部标签
+                </button>
+                <button class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm hover:bg-slate-200 transition-colors">
+                    人像
+                </button>
+                <button class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm hover:bg-slate-200 transition-colors">
+                    车辆
+                </button>
+                <button class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm hover:bg-slate-200 transition-colors">
+                    动物
+                </button>
+                <button class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm hover:bg-slate-200 transition-colors">
+                    风景
+                </button>
+                <button class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm hover:bg-slate-200 transition-colors">
+                    建筑
+                </button>
+                <button class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm hover:bg-slate-200 transition-colors">
+                    文档
+                </button>
+            </div>
+        </section>
+
+        <!-- 图片网格展示 -->
+        <section class="mb-8">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-xl font-bold">图片数据集</h2>
+                
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-1 border border-slate-200 rounded-lg overflow-hidden">
+                        <button class="px-3 py-1.5 bg-primary text-white hover:bg-primary/90 transition-colors">
+                            <i class="fa fa-th-large"></i>
+                        </button>
+                        <button class="px-3 py-1.5 text-slate-600 hover:bg-slate-50 transition-colors">
+                            <i class="fa fa-list"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="relative">
+                        <select class="appearance-none pl-4 pr-10 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white text-sm">
+                            <option>最新上传</option>
+                            <option>名称排序</option>
+                            <option>标注状态</option>
+                            <option>数据集</option>
+                        </select>
+                        <i class="fa fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none text-sm"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 批量操作栏 -->
+            <div class="bg-white rounded-xl shadow-sm p-4 mb-5 hidden" id="batchOperations">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <span class="text-slate-700"><span id="selectedCount">0</span> 张图片已选择</span>
+                        <button class="text-primary hover:text-primary/80 transition-colors">全选</button>
+                        <button class="text-slate-600 hover:text-slate-900 transition-colors">取消选择</button>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors flex items-center space-x-1 text-sm">
+                            <i class="fa fa-tag"></i>
+                            <span>添加标签</span>
+                        </button>
+                        <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors flex items-center space-x-1 text-sm">
+                            <i class="fa fa-folder-o"></i>
+                            <span>移动到</span>
+                        </button>
+                        <button class="px-3 py-1.5 border border-red-200 rounded-lg text-red-500 hover:bg-red-50 transition-colors flex items-center space-x-1 text-sm">
+                            <i class="fa fa-trash-o"></i>
+                            <span>删除</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图片网格 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <!-- 图片卡片 1 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-card card-transition hover:shadow-card-hover">
+                    <div class="relative image-zoom-container">
+                        <img src="https://picsum.photos/id/1015/500/400" alt="山脉风景" class="w-full h-48 object-cover image-zoom">
+                        <div class="absolute top-2 left-2">
+                            <input type="checkbox" class="w-5 h-5 accent-primary rounded border-slate-300">
+                        </div>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">已标注</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
+                            <div class="flex space-x-2">
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm truncate">mountain_landscape_001.jpg</h3>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="flex flex-wrap gap-1">
+                                <span class="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded">风景</span>
+                                <span class="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded">山脉</span>
+                            </div>
+                            <span class="text-xs text-slate-500">2.5MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图片卡片 2 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-card card-transition hover:shadow-card-hover">
+                    <div class="relative image-zoom-container">
+                        <img src="https://picsum.photos/id/1027/500/400" alt="花" class="w-full h-48 object-cover image-zoom">
+                        <div class="absolute top-2 left-2">
+                            <input type="checkbox" class="w-5 h-5 accent-primary rounded border-slate-300">
+                        </div>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">已标注</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
+                            <div class="flex space-x-2">
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm truncate">flower_macro_003.jpg</h3>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="flex flex-wrap gap-1">
+                                <span class="bg-purple-100 text-purple-600 text-xs px-2 py-0.5 rounded">植物</span>
+                                <span class="bg-pink-100 text-pink-600 text-xs px-2 py-0.5 rounded">花卉</span>
+                            </div>
+                            <span class="text-xs text-slate-500">3.2MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图片卡片 3 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-card card-transition hover:shadow-card-hover">
+                    <div class="relative image-zoom-container">
+                        <img src="https://picsum.photos/id/1074/500/400" alt="小狗" class="w-full h-48 object-cover image-zoom">
+                        <div class="absolute top-2 left-2">
+                            <input type="checkbox" class="w-5 h-5 accent-primary rounded border-slate-300">
+                        </div>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">已标注</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
+                            <div class="flex space-x-2">
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm truncate">dog_portrait_005.jpg</h3>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="flex flex-wrap gap-1">
+                                <span class="bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded">动物</span>
+                                <span class="bg-amber-100 text-amber-600 text-xs px-2 py-0.5 rounded">宠物</span>
+                            </div>
+                            <span class="text-xs text-slate-500">4.7MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图片卡片 4 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-card card-transition hover:shadow-card-hover">
+                    <div class="relative image-zoom-container">
+                        <img src="https://picsum.photos/id/1025/500/400" alt="人像" class="w-full h-48 object-cover image-zoom">
+                        <div class="absolute top-2 left-2">
+                            <input type="checkbox" class="w-5 h-5 accent-primary rounded border-slate-300">
+                        </div>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">待审核</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
+                            <div class="flex space-x-2">
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm truncate">portrait_male_012.jpg</h3>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="flex flex-wrap gap-1">
+                                <span class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded">人像</span>
+                                <span class="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded">男性</span>
+                            </div>
+                            <span class="text-xs text-slate-500">3.9MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图片卡片 5 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-card card-transition hover:shadow-card-hover">
+                    <div class="relative image-zoom-container">
+                        <img src="https://picsum.photos/id/1039/500/400" alt="森林" class="w-full h-48 object-cover image-zoom">
+                        <div class="absolute top-2 left-2">
+                            <input type="checkbox" class="w-5 h-5 accent-primary rounded border-slate-300">
+                        </div>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="bg-slate-500 text-white text-xs px-2 py-1 rounded-full">未标注</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
+                            <div class="flex space-x-2">
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm truncate">forest_dense_021.jpg</h3>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="flex flex-wrap gap-1">
+                                <span class="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded">自然</span>
+                                <span class="bg-teal-100 text-teal-600 text-xs px-2 py-0.5 rounded">森林</span>
+                            </div>
+                            <span class="text-xs text-slate-500">5.1MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图片卡片 6 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-card card-transition hover:shadow-card-hover">
+                    <div class="relative image-zoom-container">
+                        <img src="https://picsum.photos/id/1043/500/400" alt="桥" class="w-full h-48 object-cover image-zoom">
+                        <div class="absolute top-2 left-2">
+                            <input type="checkbox" class="w-5 h-5 accent-primary rounded border-slate-300">
+                        </div>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">已标注</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
+                            <div class="flex space-x-2">
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm truncate">bridge_architecture_007.jpg</h3>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="flex flex-wrap gap-1">
+                                <span class="bg-indigo-100 text-indigo-600 text-xs px-2 py-0.5 rounded">建筑</span>
+                                <span class="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded">桥梁</span>
+                            </div>
+                            <span class="text-xs text-slate-500">4.2MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图片卡片 7 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-card card-transition hover:shadow-card-hover">
+                    <div class="relative image-zoom-container">
+                        <img src="https://picsum.photos/id/1068/500/400" alt="食物" class="w-full h-48 object-cover image-zoom">
+                        <div class="absolute top-2 left-2">
+                            <input type="checkbox" class="w-5 h-5 accent-primary rounded border-slate-300">
+                        </div>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="bg-slate-500 text-white text-xs px-2 py-1 rounded-full">未标注</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
+                            <div class="flex space-x-2">
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm truncate">food_platter_011.jpg</h3>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="flex flex-wrap gap-1">
+                                <span class="bg-amber-100 text-amber-600 text-xs px-2 py-0.5 rounded">食物</span>
+                                <span class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded">美食</span>
+                            </div>
+                            <span class="text-xs text-slate-500">3.8MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图片卡片 8 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-card card-transition hover:shadow-card-hover">
+                    <div class="relative image-zoom-container">
+                        <img src="https://picsum.photos/id/1071/500/400" alt="鸟" class="w-full h-48 object-cover image-zoom">
+                        <div class="absolute top-2 left-2">
+                            <input type="checkbox" class="w-5 h-5 accent-primary rounded border-slate-300">
+                        </div>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">已标注</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
+                            <div class="flex space-x-2">
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm truncate">bird_wildlife_019.jpg</h3>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="flex flex-wrap gap-1">
+                                <span class="bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded">动物</span>
+                                <span class="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded">鸟类</span>
+                            </div>
+                            <span class="text-xs text-slate-500">2.9MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图片卡片 9 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-card card-transition hover:shadow-card-hover">
+                    <div class="relative image-zoom-container">
+                        <img src="https://picsum.photos/id/1079/500/400" alt="雪景" class="w-full h-48 object-cover image-zoom">
+                        <div class="absolute top-2 left-2">
+                            <input type="checkbox" class="w-5 h-5 accent-primary rounded border-slate-300">
+                        </div>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">待审核</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
+                            <div class="flex space-x-2">
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm truncate">snow_mountain_004.jpg</h3>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="flex flex-wrap gap-1">
+                                <span class="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded">风景</span>
+                                <span class="bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded">雪景</span>
+                            </div>
+                            <span class="text-xs text-slate-500">4.5MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图片卡片 10 -->
+                <div class="bg-white rounded-xl overflow-hidden shadow-card card-transition hover:shadow-card-hover">
+                    <div class="relative image-zoom-container">
+                        <img src="https://picsum.photos/id/1062/500/400" alt="城市" class="w-full h-48 object-cover image-zoom">
+                        <div class="absolute top-2 left-2">
+                            <input type="checkbox" class="w-5 h-5 accent-primary rounded border-slate-300">
+                        </div>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">已标注</span>
+                        </div>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
+                            <div class="flex space-x-2">
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+                                <button class="bg-white text-slate-800 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm truncate">city_skyline_015.jpg</h3>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="flex flex-wrap gap-1">
+                                <span class="bg-indigo-100 text-indigo-600 text-xs px-2 py-0.5 rounded">建筑</span>
+                                <span class="bg-violet-100 text-violet-600 text-xs px-2 py-0.5 rounded">城市</span>
+                            </div>
+                            <span class="text-xs text-slate-500">3.7MB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 分页 -->
+        <section class="flex justify-center">
+            <nav class="flex items-center space-x-1">
+                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
+                    <i class="fa fa-chevron-left text-xs"></i>
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white">
+                    1
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors">
+                    2
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors">
+                    3
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors">
+                    4
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors">
+                    5
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
+                    <i class="fa fa-chevron-right text-xs"></i>
+                </button>
+            </nav>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-8 mt-12">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center space-x-2 mb-4 md:mb-0">
+                    <i class="fa fa-picture-o text-primary text-2xl"></i>
+                    <h2 class="text-xl font-bold">图片数据集管理系统</h2>
+                </div>
+                
+                <div class="flex space-x-6">
+                    <a href="#" class="text-slate-300 hover:text-white transition-colors">
+                        <i class="fa fa-github text-xl"></i>
+                    </a>
+                    <a href="#" class="text-slate-300 hover:text-white transition-colors">
+                        <i class="fa fa-twitter text-xl"></i>
+                    </a>
+                    <a href="#" class="text-slate-300 hover:text-white transition-colors">
+                        <i class="fa fa-linkedin text-xl"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-slate-700 text-center text-slate-400 text-sm">
+                <p>© 2023 图片数据集管理系统. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 脚本 -->
+    <script>
+        // 导航栏滚动效果
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 10) {
+                header.classList.add('py-2', 'shadow');
+                header.classList.remove('py-3', 'shadow-sm');
+            } else {
+                header.classList.add('py-3', 'shadow-sm');
+                header.classList.remove('py-2', 'shadow');
+            }
+        });
+
+        // 处理图片选择逻辑
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const batchOperations = document.getElementById('batchOperations');
+        const selectedCount = document.getElementById('selectedCount');
+        let count = 0;
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    count++;
+                } else {
+                    count--;
+                }
+                
+                if (count > 0) {
+                    batchOperations.classList.remove('hidden');
+                    batchOperations.classList.add('block');
+                    selectedCount.textContent = count;
+                } else {
+                    batchOperations.classList.remove('block');
+                    batchOperations.classList.add('hidden');
+                }
+            });
+        });
+
+        // 全选功能
+        document.querySelector('button:text-primary').addEventListener('click', function() {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            count = checkboxes.length;
+            batchOperations.classList.remove('hidden');
+            batchOperations.classList.add('block');
+            selectedCount.textContent = count;
+        });
+
+        // 取消选择功能
+        document.querySelector('button:text-slate-600').addEventListener('click', function() {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            count = 0;
+            batchOperations.classList.remove('block');
+            batchOperations.classList.add('hidden');
+        });
+
+        // 添加一些动画效果
+        document.querySelectorAll('.card-transition').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body>
+</html>

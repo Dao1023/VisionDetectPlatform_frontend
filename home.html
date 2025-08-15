@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视觉检测平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-online {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status-offline {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        .status-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .log-container {
+            height: 250px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .camera-feed {
+            position: relative;
+            background-color: #000;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .task-item {
+            border-left: 3px solid #3b82f6;
+            transition: all 0.2s ease;
+        }
+        .task-item:hover {
+            background-color: #f0f9ff;
+            border-left-color: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex flex-col">
+        <!-- 顶部导航 -->
+        <header class="bg-blue-600 text-white p-4 shadow-md">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-2xl font-bold"><i class="fa fa-eye mr-2"></i>视觉检测平台</h1>
+                <div class="flex space-x-4">
+                    <button id="refreshBtn" class="bg-white text-blue-600 px-4 py-2 rounded-md font-medium hover:bg-blue-50 transition"><i class="fa fa-refresh mr-1"></i>刷新</button>
+                    <button id="settingsBtn" class="bg-white text-blue-600 px-4 py-2 rounded-md font-medium hover:bg-blue-50 transition"><i class="fa fa-cog mr-1"></i>设置</button>
+                    <button id="aboutBtn" class="bg-white text-blue-600 px-4 py-2 rounded-md font-medium hover:bg-blue-50 transition"><i class="fa fa-info-circle mr-1"></i>关于</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 container mx-auto p-6">
+            <!-- 相机选择和显示区域 -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-4">
+                    <h2 class="text-xl font-bold text-gray-800"><i class="fa fa-video-camera mr-2"></i>相机监控</h2>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <select id="cameraSelect" class="appearance-none pl-4 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                                <option value="camera1">主摄像头 (CAM-2023001)</option>
+                                <option value="camera2">侧摄像头 (CAM-2023002)</option>
+                                <option value="camera3">备用摄像头 (CAM-2023003)</option>
+                                <option value="camera4">检测摄像头 (CAM-2023004)</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <i class="fa fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+                        <button id="startStreamBtn" class="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition"><i class="fa fa-play mr-1"></i>开始监控</button>
+                        <button id="captureBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 transition"><i class="fa fa-camera mr-1"></i>截图</button>
+                    </div>
+                </div>
+
+                <div class="camera-feed w-full" style="height: 400px;">
+                    <img id="cameraStream" src="https://via.placeholder.com/1200x400/333333/FFFFFF?text=摄像头监控画面" alt="摄像头监控画面" class="w-full h-full object-contain">
+                    <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-sm flex justify-between items-center">
+                        <div><span id="cameraStatus" class="status-badge status-online mr-2">在线</span><span id="cameraName">主摄像头</span></div>
+                        <div><i class="fa fa-clock-o mr-1"></i><span id="currentTime">00:00:00</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据信息和任务区域 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- 左侧：统计信息区 -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fa fa-bar-chart mr-2"></i>统计信息</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="stat-card bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                <div class="text-sm text-gray-500 mb-1">合格率</div>
+                                <div class="text-2xl font-bold text-blue-600 flex items-center">
+                                    <span id="passRate">98.7%</span>
+                                    <span class="ml-2 text-sm text-green-600"><i class="fa fa-arrow-up"></i> 1.2%</span>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-1">较昨日</div>
+                            </div>
+                            <div class="stat-card bg-green-50 p-4 rounded-lg border border-green-100">
+                                <div class="text-sm text-gray-500 mb-1">检测数量</div>
+                                <div class="text-2xl font-bold text-green-600">
+                                    <span id="inspectionCount">1,245</span>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-1">今日</div>
+                            </div>
+                            <div class="stat-card bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                                <div class="text-sm text-gray-500 mb-1">不合格数</div>
+                                <div class="text-2xl font-bold text-yellow-600">
+                                    <span id="failCount">16</span>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-1">今日</div>
+                            </div>
+                            <div class="stat-card bg-purple-50 p-4 rounded-lg border border-purple-100">
+                                <div class="text-sm text-gray-500 mb-1">运行时间</div>
+                                <div class="text-2xl font-bold text-purple-600">
+                                    <span id="runTime">8h 35m</span>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-1">今日</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fa fa-plug mr-2"></i>连接状态</h2>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <i class="fa fa-video-camera text-blue-500 mr-3"></i>
+                                    <span>相机连接</span>
+                                </div>
+                                <span class="status-badge status-online">4/4 在线</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <i class="fa fa-microchip text-green-500 mr-3"></i>
+                                    <span>PLC连接</span>
+                                </div>
+                                <span class="status-badge status-online">已连接</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <i class="fa fa-database text-purple-500 mr-3"></i>
+                                    <span>数据库</span>
+                                </div>
+                                <span class="status-badge status-online">正常</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <i class="fa fa-network-wired text-orange-500 mr-3"></i>
+                                    <span>网络状态</span>
+                                </div>
+                                <span class="status-badge status-warning">信号弱</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 中间：任务展示区域 -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fa fa-tasks mr-2"></i>当前任务</h2>
+                        <div class="space-y-3" id="taskList">
+                            <div class="task-item bg-gray-50 p-4 rounded-lg">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="font-semibold text-gray-800">产品外观检测</h3>
+                                    <span class="status-badge status-online">进行中</span>
+                                </div>
+                                <div class="text-sm text-gray-600 space-y-1">
+                                    <div>相机: 主摄像头 (CAM-2023001)</div>
+                                    <div>检测类型: 缺陷检测</div>
+                                    <div>进度: <div class="w-full bg-gray-200 rounded-full h-2 mt-1"><div class="bg-blue-600 h-2 rounded-full" style="width: 75%"></div></div></div>
+                                </div>
+                            </div>
+                            <div class="task-item bg-gray-50 p-4 rounded-lg">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="font-semibold text-gray-800">尺寸测量</h3>
+                                    <span class="status-badge status-warning">待执行</span>
+                                </div>
+                                <div class="text-sm text-gray-600 space-y-1">
+                                    <div>相机: 侧摄像头 (CAM-2023002)</div>
+                                    <div>检测类型: 尺寸测量</div>
+                                    <div>优先级: 高</div>
+                                </div>
+                            </div>
+                            <div class="task-item bg-gray-50 p-4 rounded-lg">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="font-semibold text-gray-800">条形码识别</h3>
+                                    <span class="status-badge status-offline">已完成</span>
+                                </div>
+                                <div class="text-sm text-gray-600 space-y-1">
+                                    <div>相机: 备用摄像头 (CAM-2023003)</div>
+                                    <div>检测类型: 条形码识别</div>
+                                    <div>完成时间: 10:23:45</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fa fa-microchip mr-2"></i>PLC Tag信息</h2>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tag名称</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">当前值</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200" id="plcTagTable">
+                                    <tr>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">Production_Run</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">1</td>
+                                        <td class="px-4 py-3 whitespace-nowrap"><span class="status-badge status-online">运行中</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">Product_Count</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">1245</td>
+                                        <td class="px-4 py-3 whitespace-nowrap"><span class="status-badge status-online">正常</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">Error_Code</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">0</td>
+                                        <td class="px-4 py-3 whitespace-nowrap"><span class="status-badge status-online">无错误</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">Inspection_Ready</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">1</td>
+                                        <td class="px-4 py-3 whitespace-nowrap"><span class="status-badge status-online">就绪</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：日志区域 -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-bold text-gray-800"><i class="fa fa-list-alt mr-2"></i>系统日志</h2>
+                            <div class="flex space-x-2">
+                                <button id="clearLogBtn" class="text-sm text-gray-500 hover:text-gray-700"><i class="fa fa-trash mr-1"></i>清空</button>
+                                <select id="logLevel" class="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="all">全部</option>
+                                    <option value="info">信息</option>
+                                    <option value="error">错误</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="log-container bg-gray-50 p-3 rounded-md border border-gray-200" id="systemLog">
+                            <div class="text-gray-600"><i class="fa fa-info-circle mr-1"></i> <span class="log-time">11:23:45</span> 系统启动成功</div>
+                            <div class="text-gray-600"><i class="fa fa-info-circle mr-1"></i> <span class="log-time">11:23:50</span> 连接到相机 CAM-2023001</div>
+                            <div class="text-gray-600"><i class="fa fa-info-circle mr-1"></i> <span class="log-time">11:23:55</span> 连接到PLC成功</div>
+                            <div class="text-gray-600"><i class="fa fa-info-circle mr-1"></i> <span class="log-time">11:24:10</span> 开始执行产品外观检测任务</div>
+                            <div class="text-red-600"><i class="fa fa-exclamation-circle mr-1"></i> <span class="log-time">11:30:22</span> 相机 CAM-2023003 信号丢失</div>
+                            <div class="text-gray-600"><i class="fa fa-info-circle mr-1"></i> <span class="log-time">11:30:35</span> 重新连接到相机 CAM-2023003</div>
+                            <div class="text-yellow-600"><i class="fa fa-warning mr-1"></i> <span class="log-time">11:45:18</span> 网络信号变弱</div>
+                            <div class="text-gray-600"><i class="fa fa-info-circle mr-1"></i> <span class="log-time">12:15:30</span> 完成条形码识别任务</div>
+                            <div class="text-gray-600"><i class="fa fa-info-circle mr-1"></i> <span class="log-time">12:15:45</span> 准备执行尺寸测量任务</div>
+                            <div class="text-red-600"><i class="fa fa-exclamation-circle mr-1"></i> <span class="log-time">12:20:10</span> 检测到产品缺陷 #12345</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="bg-gray-800 text-white p-3 text-center text-sm">
+            <p>© 2023 视觉检测平台 | 版本 1.0.0</p>
+        </footer>
+    </div>
+
+    <script>
+        // 更新当前时间
+        function updateCurrentTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('currentTime').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        // 模拟日志更新
+        function addNewLog(level, message) {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeString = `${hours}:${minutes}:${seconds}`;
+
+            const logContainer = document.getElementById('systemLog');
+            const logEntry = document.createElement('div');
+
+            let iconClass = '';
+            let textClass = '';
+
+            switch(level) {
+                case 'info':
+                    iconClass = 'fa-info-circle mr-1';
+                    textClass = 'text-gray-600';
+                    break;
+                case 'error':
+                    iconClass = 'fa-exclamation-circle mr-1';
+                    textClass = 'text-red-600';
+                    break;
+                case 'warning':
+                    iconClass = 'fa-warning mr-1';
+                    textClass = 'text-yellow-600';
+                    break;
+            }
+
+            logEntry.className = textClass;
+            logEntry.innerHTML = `<i class="fa ${iconClass}"></i> <span class="log-time">${timeString}</span> ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+
+            // 限制日志数量
+            if (logContainer.children.length > 100) {
+                logContainer.removeChild(logContainer.firstChild);
+            }
+        }
+
+        // 模拟数据更新
+        function updateData() {
+            // 随机更新合格率
+            const passRate = (98 + Math.random() * 2).toFixed(1);
+            document.getElementById('passRate').textContent = `${passRate}%`;
+
+            // 随机更新检测数量
+            const currentCount = parseInt(document.getElementById('inspectionCount').textContent.replace(',', ''));
+            const newCount = currentCount + Math.floor(Math.random() * 5);
+            document.getElementById('inspectionCount').textContent = newCount.toLocaleString();
+
+            // 随机添加日志
+            const logTypes = [
+                { level: 'info', messages: ['检测到合格产品', 'PLC数据更新', '系统正常运行中', '相机状态良好'] },
+                { level: 'warning', messages: ['网络延迟增加', '相机温度略高', 'PLC响应变慢', '数据库负载增加'] },
+                { level: 'error', messages: ['检测到产品缺陷', '相机信号干扰', 'PLC通信临时中断', '数据存储失败'] }
+            ];
+
+            if (Math.random() > 0.7) {
+                const logType = logTypes[Math.floor(Math.random() * logTypes.length)];
+                const message = logType.messages[Math.floor(Math.random() * logType.messages.length)];
+                addNewLog(logType.level, message);
+            }
+        }
+
+        // 事件监听
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化时间
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+
+            // 模拟数据更新
+            setInterval(updateData, 5000);
+
+            // 相机选择事件
+            document.getElementById('cameraSelect').addEventListener('change', function() {
+                const selectedCamera = this.options[this.selectedIndex].text;
+                document.getElementById('cameraName').textContent = selectedCamera.split(' ')[0];
+                addNewLog('info', `切换到相机: ${selectedCamera}`);
+            });
+
+            // 开始监控按钮事件
+            document.getElementById('startStreamBtn').addEventListener('click', function() {
+                if (this.textContent.includes('开始')) {
+                    this.textContent = '<i class="fa fa-stop mr-1"></i>停止监控';
+                    this.className = 'bg-red-600 text-white px-4 py-2 rounded-md font-medium hover:bg-red-700 transition';
+                    addNewLog('info', '开始相机监控');
+                } else {
+                    this.textContent = '<i class="fa fa-play mr-1"></i>开始监控';
+                    this.className = 'bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition';
+                    addNewLog('info', '停止相机监控');
+                }
+            });
+
+            // 截图按钮事件
+            document.getElementById('captureBtn').addEventListener('click', function() {
+                addNewLog('info', '已截取当前画面');
+                // 这里可以添加截图逻辑
+            });
+
+            // 清空日志按钮事件
+            document.getElementById('clearLogBtn').addEventListener('click', function() {
+                document.getElementById('systemLog').innerHTML = '';
+                addNewLog('info', '日志已清空');
+            });
+
+            // 日志级别筛选事件
+            document.getElementById('logLevel').addEventListener('change', function() {
+                const selectedLevel = this.value;
+                const logEntries = document.querySelectorAll('#systemLog > div');
+
+                logEntries.forEach(entry => {
+                    if (selectedLevel === 'all') {
+                        entry.style.display = 'block';
+                    } else if (selectedLevel === 'info' && entry.classList.contains('text-gray-600')) {
+                        entry.style.display = 'block';
+                    } else if (selectedLevel === 'error' && entry.classList.contains('text-red-600')) {
+                        entry.style.display = 'block';
+                    } else {
+                        entry.style.display = 'none';
+                    }
+                });
+            });
+
+            // 刷新按钮事件
+            document.getElementById('refreshBtn').addEventListener('click', function() {
+                addNewLog('info', '系统已刷新');
+                // 这里可以添加刷新逻辑
+            });
+        });
+    </script>
+</body>
+</html>

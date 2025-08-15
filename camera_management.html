@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摄像头管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-online {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status-offline {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        .status-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex flex-col">
+        <!-- 顶部导航 -->
+        <header class="bg-blue-600 text-white p-4 shadow-md">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-2xl font-bold"><i class="fa fa-video-camera mr-2"></i>摄像头管理系统</h1>
+                <div class="flex space-x-4">
+                    <button id="addCameraBtn" class="bg-white text-blue-600 px-4 py-2 rounded-md font-medium hover:bg-blue-50 transition"><i class="fa fa-plus mr-1"></i>添加摄像头</button>
+                    <button id="refreshBtn" class="bg-white text-blue-600 px-4 py-2 rounded-md font-medium hover:bg-blue-50 transition"><i class="fa fa-refresh mr-1"></i>刷新</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 container mx-auto p-6">
+            <!-- 搜索和筛选 -->
+            <div class="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+                <div class="flex-1 max-w-md w-full">
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="搜索摄像头..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <i class="fa fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex space-x-3">
+                    <select id="statusFilter" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="all">全部状态</option>
+                        <option value="online">在线</option>
+                        <option value="offline">离线</option>
+                        <option value="warning">警告</option>
+                    </select>
+                    <select id="workstationFilter" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="all">全部工位</option>
+                        <option value="workstation1">工位1</option>
+                        <option value="workstation2">工位2</option>
+                        <option value="workstation3">工位3</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 摄像头信息表格 -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">序号</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">序列号</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">设备名</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP地址</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">工位</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cameraTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- 表格数据将通过JavaScript动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">上一页</a>
+                        <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">下一页</a>
+                    </div>
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                显示第 <span class="font-medium">1</span> 至 <span class="font-medium">10</span> 条，共 <span class="font-medium">25</span> 条结果
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">上一页</span>
+                                    <i class="fa fa-chevron-left"></i>
+                                </a>
+                                <a href="#" aria-current="page" class="z-10 bg-blue-50 border-blue-500 text-blue-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">1</a>
+                                <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">2</a>
+                                <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">3</a>
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
+                                <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">25</a>
+                                <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">下一页</span>
+                                    <i class="fa fa-chevron-right"></i>
+                                </a>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="bg-gray-800 text-white p-3 text-center text-sm">
+            <p>© 2023 摄像头管理系统 | 版本 1.0.0</p>
+        </footer>
+    </div>
+
+    <!-- 添加/编辑摄像头模态框 -->
+    <div id="cameraModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
+            <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
+                <h3 id="modalTitle" class="text-lg font-bold">添加摄像头</h3>
+                <button id="closeModalBtn" class="text-white hover:text-gray-200">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="cameraForm">
+                    <input type="hidden" id="cameraId">
+                    <div class="mb-4">
+                        <label for="serialNumber" class="block text-sm font-medium text-gray-700 mb-1">序列号</label>
+                        <input type="text" id="serialNumber" name="serialNumber" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div class="mb-4">
+                        <label for="deviceName" class="block text-sm font-medium text-gray-700 mb-1">设备名</label>
+                        <input type="text" id="deviceName" name="deviceName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div class="mb-4">
+                        <label for="ipAddress" class="block text-sm font-medium text-gray-700 mb-1">IP地址</label>
+                        <input type="text" id="ipAddress" name="ipAddress" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div class="mb-4">
+                        <label for="workstation" class="block text-sm font-medium text-gray-700 mb-1">工位</label>
+                        <select id="workstation" name="workstation" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="workstation1">工位1</option>
+                            <option value="workstation2">工位2</option>
+                            <option value="workstation3">工位3</option>
+                            <option value="workstation4">工位4</option>
+                            <option value="workstation5">工位5</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" id="cancelBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">取消</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟摄像头数据
+        const cameras = [
+            { id: 1, serialNumber: 'CAM-2023001', deviceName: '主入口摄像头', ipAddress: '192.168.1.101', workstation: 'workstation1', status: 'online' },
+            { id: 2, serialNumber: 'CAM-2023002', deviceName: '停车场摄像头', ipAddress: '192.168.1.102', workstation: 'workstation2', status: 'online' },
+            { id: 3, serialNumber: 'CAM-2023003', deviceName: '仓库摄像头', ipAddress: '192.168.1.103', workstation: 'workstation3', status: 'offline' },
+            { id: 4, serialNumber: 'CAM-2023004', deviceName: '电梯摄像头', ipAddress: '192.168.1.104', workstation: 'workstation1', status: 'online' },
+            { id: 5, serialNumber: 'CAM-2023005', deviceName: '车间摄像头', ipAddress: '192.168.1.105', workstation: 'workstation4', status: 'warning' },
+            { id: 6, serialNumber: 'CAM-2023006', deviceName: '会议室摄像头', ipAddress: '192.168.1.106', workstation: 'workstation5', status: 'online' },
+            { id: 7, serialNumber: 'CAM-2023007', deviceName: '后门摄像头', ipAddress: '192.168.1.107', workstation: 'workstation2', status: 'offline' },
+            { id: 8, serialNumber: 'CAM-2023008', deviceName: '财务室摄像头', ipAddress: '192.168.1.108', workstation: 'workstation5', status: 'online' },
+            { id: 9, serialNumber: 'CAM-2023009', deviceName: '服务器机房摄像头', ipAddress: '192.168.1.109', workstation: 'workstation3', status: 'warning' },
+            { id: 10, serialNumber: 'CAM-2023010', deviceName: '研发部摄像头', ipAddress: '192.168.1.110', workstation: 'workstation4', status: 'online' }
+        ];
+
+        // DOM 元素
+        const cameraTableBody = document.getElementById('cameraTableBody');
+        const cameraModal = document.getElementById('cameraModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const cameraForm = document.getElementById('cameraForm');
+        const cameraIdInput = document.getElementById('cameraId');
+        const serialNumberInput = document.getElementById('serialNumber');
+        const deviceNameInput = document.getElementById('deviceName');
+        const ipAddressInput = document.getElementById('ipAddress');
+        const workstationInput = document.getElementById('workstation');
+        const addCameraBtn = document.getElementById('addCameraBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const workstationFilter = document.getElementById('workstationFilter');
+
+        // 渲染摄像头表格
+        function renderCameraTable(camerasToRender) {
+            cameraTableBody.innerHTML = '';
+
+            camerasToRender.forEach((camera, index) => {
+                const statusClass = camera.status === 'online' ? 'status-online' : camera.status === 'offline' ? 'status-offline' : 'status-warning';
+                const statusText = camera.status === 'online' ? '在线' : camera.status === 'offline' ? '离线' : '警告';
+                const workstationText = camera.workstation === 'workstation1' ? '工位1' : camera.workstation === 'workstation2' ? '工位2' : camera.workstation === 'workstation3' ? '工位3' : camera.workstation === 'workstation4' ? '工位4' : '工位5';
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${index + 1}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${camera.serialNumber}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${camera.deviceName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${camera.ipAddress}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${workstationText}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="text-blue-600 hover:text-blue-900 mr-3 view-btn" data-id="${camera.id}"><i class="fa fa-eye mr-1"></i>查看</button>
+                        <button class="text-green-600 hover:text-green-900 mr-3 edit-btn" data-id="${camera.id}"><i class="fa fa-pencil mr-1"></i>编辑</button>
+                        <button class="text-red-600 hover:text-red-900 delete-btn" data-id="${camera.id}"><i class="fa fa-trash mr-1"></i>删除</button>
+                    </td>
+                `;
+                cameraTableBody.appendChild(row);
+            });
+
+            // 添加按钮事件监听
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', () => viewCamera(btn.dataset.id));
+            });
+
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => editCamera(btn.dataset.id));
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteCamera(btn.dataset.id));
+            });
+        }
+
+        // 查看摄像头
+        function viewCamera(id) {
+            const camera = cameras.find(c => c.id == id);
+            if (camera) {
+                alert(`查看摄像头: ${camera.deviceName}\n序列号: ${camera.serialNumber}\nIP: ${camera.ipAddress}\n工位: ${camera.workstation === 'workstation1' ? '工位1' : camera.workstation === 'workstation2' ? '工位2' : camera.workstation === 'workstation3' ? '工位3' : camera.workstation === 'workstation4' ? '工位4' : '工位5'}\n状态: ${camera.status === 'online' ? '在线' : camera.status === 'offline' ? '离线' : '警告'}`);
+            }
+        }
+
+        // 编辑摄像头
+        function editCamera(id) {
+            const camera = cameras.find(c => c.id == id);
+            if (camera) {
+                modalTitle.textContent = '编辑摄像头';
+                cameraIdInput.value = camera.id;
+                serialNumberInput.value = camera.serialNumber;
+                deviceNameInput.value = camera.deviceName;
+                ipAddressInput.value = camera.ipAddress;
+                workstationInput.value = camera.workstation;
+                cameraModal.classList.remove('hidden');
+            }
+        }
+
+        // 删除摄像头
+        function deleteCamera(id) {
+            if (confirm('确定要删除这个摄像头吗?')) {
+                const index = cameras.findIndex(c => c.id == id);
+                if (index !== -1) {
+                    cameras.splice(index, 1);
+                    filterAndRenderCameras();
+                }
+            }
+        }
+
+        // 打开添加摄像头模态框
+        function openAddCameraModal() {
+            modalTitle.textContent = '添加摄像头';
+            cameraForm.reset();
+            cameraIdInput.value = '';
+            cameraModal.classList.remove('hidden');
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            cameraModal.classList.add('hidden');
+        }
+
+        // 筛选并渲染摄像头
+        function filterAndRenderCameras() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const statusValue = statusFilter.value;
+            const workstationValue = workstationFilter.value;
+
+            let filteredCameras = cameras;
+
+            // 应用搜索筛选
+            if (searchTerm) {
+                filteredCameras = filteredCameras.filter(camera => 
+                    camera.serialNumber.toLowerCase().includes(searchTerm) ||
+                    camera.deviceName.toLowerCase().includes(searchTerm) ||
+                    camera.ipAddress.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // 应用状态筛选
+            if (statusValue !== 'all') {
+                filteredCameras = filteredCameras.filter(camera => camera.status === statusValue);
+            }
+
+            // 应用工位筛选
+            if (workstationValue !== 'all') {
+                filteredCameras = filteredCameras.filter(camera => camera.workstation === workstationValue);
+            }
+
+            renderCameraTable(filteredCameras);
+        }
+
+        // 事件监听
+        addCameraBtn.addEventListener('click', openAddCameraModal);
+        closeModalBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+        refreshBtn.addEventListener('click', filterAndRenderCameras);
+        searchInput.addEventListener('input', filterAndRenderCameras);
+        statusFilter.addEventListener('change', filterAndRenderCameras);
+        workstationFilter.addEventListener('change', filterAndRenderCameras);
+
+        // 表单提交
+        cameraForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const id = cameraIdInput.value;
+            const serialNumber = serialNumberInput.value;
+            const deviceName = deviceNameInput.value;
+            const ipAddress = ipAddressInput.value;
+            const workstation = workstationInput.value;
+
+            if (id) {
+                // 编辑现有摄像头
+                const index = cameras.findIndex(c => c.id == id);
+                if (index !== -1) {
+                    cameras[index] = { ...cameras[index], serialNumber, deviceName, ipAddress, workstation };
+                }
+            } else {
+                // 添加新摄像头
+                const newId = cameras.length > 0 ? Math.max(...cameras.map(c => c.id)) + 1 : 1;
+                cameras.push({
+                    id: newId,
+                    serialNumber,
+                    deviceName,
+                    ipAddress,
+                    workstation,
+                    status: 'online'
+                });
+            }
+
+            filterAndRenderCameras();
+            closeModal();
+        });
+
+        // 点击模态框外部关闭
+        cameraModal.addEventListener('click', function(e) {
+            if (e.target === cameraModal) {
+                closeModal();
+            }
+        });
+
+        // 初始化渲染
+        renderCameraTable(cameras);
+    </script>
+</body>
+</html>

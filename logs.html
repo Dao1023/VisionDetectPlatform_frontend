@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日志管理 - 视觉检测平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#0E42D2',
+                        success: '#00B42A',
+                        warning: '#FF7D00',
+                        danger: '#F53F3F',
+                        info: '#86909C',
+                        bgLight: '#F2F3F5',
+                        bgDark: '#1D2129',
+                        textMain: '#1D2129',
+                        textSecondary: '#4E5969',
+                        borderColor: '#C9CDD4',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 2px 14px 0 rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 6px 20px 0 rgba(0, 0, 0, 0.08)',
+                    }
+                },
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+            .log-container {
+                max-height: calc(100vh - 300px);
+                overflow-y: auto;
+            }
+            .log-entry {
+                transition: background-color 0.2s ease;
+            }
+            .log-entry:hover {
+                background-color: #f0f9ff;
+            }
+        }
+    </style>
+    
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        .status-success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .status-error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        .log-type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .log-type-camera {
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+        .log-type-plc {
+            background-color: #f0fdf4;
+            color: #166534;
+        }
+        .log-type-image {
+            background-color: #fdf2f8;
+            color: #9d174d;
+        }
+        .log-type-dataset {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .log-type-training {
+            background-color: #ede9fe;
+            color: #5b21b6;
+        }
+        /* 滚动条样式 */
+        .log-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .log-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .log-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        .log-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-textMain min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-md fixed w-full top-0 left-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-eye text-primary text-2xl"></i>
+                <h1 class="text-xl font-bold text-primary">视觉检测平台</h1>
+            </div>
+            
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="home.html" class="text-textSecondary hover:text-primary transition-all-300">首页</a>
+                <a href="datasets.html" class="text-textSecondary hover:text-primary transition-all-300">数据集</a>
+                <a href="model_training.html" class="text-textSecondary hover:text-primary transition-all-300">模型训练</a>
+                <a href="gallery_management.html" class="text-textSecondary hover:text-primary transition-all-300">模型库</a>
+                <a href="camera_management.html" class="text-textSecondary hover:text-primary transition-all-300">摄像头管理</a>
+                <a href="logs.html" class="text-primary font-medium border-b-2 border-primary pb-1">日志管理</a>
+            </nav>
+            
+            <div class="flex items-center space-x-4">
+                <button class="text-textSecondary hover:text-primary transition-all-300">
+                    <i class="fa fa-bell-o text-xl"></i>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <img src="https://picsum.photos/id/64/40/40" alt="用户头像" class="w-8 h-8 rounded-full border-2 border-primary">
+                    <span class="hidden md:inline text-sm font-medium">管理员</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 pt-24 pb-12">
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold mb-2">系统日志管理</h2>
+            <p class="text-textSecondary">查看和管理系统各组件的运行日志</p>
+        </div>
+
+        <!-- 筛选器区域 -->
+        <div class="bg-white rounded-xl shadow-card p-6 mb-6">
+            <div class="flex flex-col md:flex-row gap-4 mb-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-textSecondary mb-1">搜索日志</label>
+                    <div class="relative">
+                        <input type="text" id="logSearch" placeholder="输入关键词搜索日志..." 
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300">
+                        <i class="fa fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <div class="w-full md:w-64">
+                    <label class="block text-sm font-medium text-textSecondary mb-1">日志类型</label>
+                    <div class="relative">
+                        <select id="logTypeFilter" 
+                            class="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none bg-white transition-all-300">
+                            <option value="all">全部类型</option>
+                            <option value="camera">摄像头</option>
+                            <option value="plc">PLC</option>
+                            <option value="image">图片处理</option>
+                            <option value="dataset">数据集</option>
+                            <option value="training">模型训练</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fa fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="w-full md:w-48">
+                    <label class="block text-sm font-medium text-textSecondary mb-1">严重级别</label>
+                    <div class="relative">
+                        <select id="logLevelFilter" 
+                            class="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none bg-white transition-all-300">
+                            <option value="all">全部级别</option>
+                            <option value="info">信息</option>
+                            <option value="success">成功</option>
+                            <option value="warning">警告</option>
+                            <option value="error">错误</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fa fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col md:flex-row gap-4 items-start md:items-end justify-between">
+                <div class="flex flex-wrap gap-2">
+                    <div class="w-full md:w-48">
+                        <label class="block text-sm font-medium text-textSecondary mb-1">开始时间</label>
+                        <input type="datetime-local" id="startTimeFilter" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300">
+                    </div>
+                    <div class="w-full md:w-48">
+                        <label class="block text-sm font-medium text-textSecondary mb-1">结束时间</label>
+                        <input type="datetime-local" id="endTimeFilter" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300">
+                    </div>
+                </div>
+                
+                <div class="flex space-x-2 w-full md:w-auto">
+                    <button id="applyFilterBtn" class="flex-1 md:flex-none px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-all-300">
+                        <i class="fa fa-filter mr-1"></i>应用筛选
+                    </button>
+                    <button id="resetFilterBtn" class="flex-1 md:flex-none px-4 py-2 text-textSecondary border border-gray-300 rounded-lg hover:bg-gray-50 transition-all-300">
+                        <i class="fa fa-refresh mr-1"></i>重置
+                    </button>
+                    <button id="exportLogsBtn" class="flex-1 md:flex-none px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-all-300">
+                        <i class="fa fa-download mr-1"></i>导出
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 日志统计卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div class="bg-white rounded-xl shadow-card p-6 transition-all-300 hover:shadow-card-hover">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-textMain">今日日志总数</h3>
+                    <i class="fa fa-file-text-o text-primary text-2xl"></i>
+                </div>
+                <p class="text-3xl font-bold text-primary mb-1">2,845</p>
+                <p class="text-textSecondary text-sm"><i class="fa fa-arrow-up text-success mr-1"></i>较昨日增长12%</p>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-card p-6 transition-all-300 hover:shadow-card-hover">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-textMain">错误日志</h3>
+                    <i class="fa fa-exclamation-circle text-danger text-2xl"></i>
+                </div>
+                <p class="text-3xl font-bold text-danger mb-1">24</p>
+                <p class="text-textSecondary text-sm"><i class="fa fa-arrow-down text-success mr-1"></i>较昨日减少8%</p>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-card p-6 transition-all-300 hover:shadow-card-hover">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-textMain">警告日志</h3>
+                    <i class="fa fa-exclamation-triangle text-warning text-2xl"></i>
+                </div>
+                <p class="text-3xl font-bold text-warning mb-1">158</p>
+                <p class="text-textSecondary text-sm"><i class="fa fa-arrow-up text-danger mr-1"></i>较昨日增长5%</p>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-card p-6 transition-all-300 hover:shadow-card-hover">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-textMain">摄像头日志</h3>
+                    <i class="fa fa-video-camera text-info text-2xl"></i>
+                </div>
+                <p class="text-3xl font-bold text-info mb-1">1,245</p>
+                <p class="text-textSecondary text-sm"><i class="fa fa-arrow-up text-success mr-1"></i>较昨日增长3%</p>
+            </div>
+        </div>
+
+        <!-- 日志列表 -->
+        <div class="bg-white rounded-xl shadow-card overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时间</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">级别</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">来源</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">消息</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody" class="bg-white divide-y divide-gray-200 log-container">
+                        <!-- 日志条目 - 摄像头类型 -->
+                        <tr class="log-entry">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textSecondary">2023-11-15 14:32:45</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="log-type-badge log-type-camera">摄像头</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-badge status-success">成功</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textMain">CAM-2023001</td>
+                            <td class="px-6 py-4 text-sm text-textMain">摄像头连接成功，开始采集图像</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-secondary transition-all-300 view-log-details" data-id="1">查看详情</button>
+                            </td>
+                        </tr>
+                        
+                        <!-- 日志条目 - PLC类型 -->
+                        <tr class="log-entry">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textSecondary">2023-11-15 14:30:12</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="log-type-badge log-type-plc">PLC</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-badge status-warning">警告</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textMain">PLC-001</td>
+                            <td class="px-6 py-4 text-sm text-textMain">PLC通信延迟超出阈值 (150ms)</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-secondary transition-all-300 view-log-details" data-id="2">查看详情</button>
+                            </td>
+                        </tr>
+                        
+                        <!-- 日志条目 - 图片类型 -->
+                        <tr class="log-entry">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textSecondary">2023-11-15 14:28:55</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="log-type-badge log-type-image">图片处理</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-badge status-info">信息</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textMain">IMAGE_PROCESSOR</td>
+                            <td class="px-6 py-4 text-sm text-textMain">成功处理图片 20231115_142840.jpg</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-secondary transition-all-300 view-log-details" data-id="3">查看详情</button>
+                            </td>
+                        </tr>
+                        
+                        <!-- 日志条目 - 数据集类型 -->
+                        <tr class="log-entry">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textSecondary">2023-11-15 14:25:30</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="log-type-badge log-type-dataset">数据集</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-badge status-success">成功</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textMain">DATASET-202311</td>
+                            <td class="px-6 py-4 text-sm text-textMain">数据集更新完成，新增150张图片</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-secondary transition-all-300 view-log-details" data-id="4">查看详情</button>
+                            </td>
+                        </tr>
+                        
+                        <!-- 日志条目 - 模型训练类型 -->
+                        <tr class="log-entry">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textSecondary">2023-11-15 14:20:18</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="log-type-badge log-type-training">模型训练</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-badge status-error">错误</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textMain">TRAINING-20231115-01</td>
+                            <td class="px-6 py-4 text-sm text-textMain">模型训练失败：内存不足</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-secondary transition-all-300 view-log-details" data-id="5">查看详情</button>
+                            </td>
+                        </tr>
+                        
+                        <!-- 更多日志条目 -->
+                        <tr class="log-entry">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textSecondary">2023-11-15 14:15:42</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="log-type-badge log-type-camera">摄像头</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-badge status-info">信息</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textMain">CAM-2023002</td>
+                            <td class="px-6 py-4 text-sm text-textMain">摄像头参数调整：曝光时间设为50ms</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-secondary transition-all-300 view-log-details" data-id="6">查看详情</button>
+                            </td>
+                        </tr>
+                        
+                        <tr class="log-entry">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textSecondary">2023-11-15 14:10:22</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="log-type-badge log-type-plc">PLC</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-badge status-success">成功</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textMain">PLC-002</td>
+                            <td class="px-6 py-4 text-sm text-textMain">PLC控制指令执行成功：启动传送带</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-secondary transition-all-300 view-log-details" data-id="7">查看详情</button>
+                            </td>
+                        </tr>
+                        
+                        <tr class="log-entry">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textSecondary">2023-11-15 14:05:37</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="log-type-badge log-type-image">图片处理</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-badge status-warning">警告</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textMain">IMAGE_PROCESSOR</td>
+                            <td class="px-6 py-4 text-sm text-textMain">图片质量低于阈值，可能影响检测结果</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-secondary transition-all-300 view-log-details" data-id="8">查看详情</button>
+                            </td>
+                        </tr>
+                        
+                        <tr class="log-entry">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textSecondary">2023-11-15 14:00:15</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="log-type-badge log-type-dataset">数据集</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-badge status-info">信息</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textMain">DATASET-202310</td>
+                            <td class="px-6 py-4 text-sm text-textMain">数据集备份完成，存储路径：/backup/20231115/</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-secondary transition-all-300 view-log-details" data-id="9">查看详情</button>
+                            </td>
+                        </tr>
+                        
+                        <tr class="log-entry">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textSecondary">2023-11-15 13:55:40</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="log-type-badge log-type-training">模型训练</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-badge status-info">信息</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-textMain">TRAINING-20231115-01</td>
+                            <td class="px-6 py-4 text-sm text-textMain">模型训练开始，使用数据集 DATASET-202311</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-secondary transition-all-300 view-log-details" data-id="10">查看详情</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页控件 -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">上一页</button>
+                    <button class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">下一页</button>
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            显示第 <span class="font-medium">1</span> 至 <span class="font-medium">10</span> 条，共 <span class="font-medium">2,845</span> 条结果
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">上一页</span>
+                                <i class="fa fa-chevron-left"></i>
+                            </button>
+                            <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-primary text-sm font-medium text-white">
+                                1
+                            </button>
+                            <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                2
+                            </button>
+                            <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                3
+                            </button>
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                ...
+                            </span>
+                            <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                284
+                            </button>
+                            <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                285
+                            </button>
+                            <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">下一页</span>
+                                <i class="fa fa-chevron-right"></i>
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 日志详情弹窗 -->
+    <div id="logDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-textMain">日志详情</h3>
+                <button id="closeLogDetailsBtn" class="text-gray-400 hover:text-gray-500">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="px-6 py-4 overflow-y-auto flex-1">
+                <div id="logDetailsContent">
+                    <!-- 详情内容将通过JavaScript动态填充 -->
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                <button id="closeLogDetailsBtnBottom" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-all-300">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导出选项弹窗 -->
+    <div id="exportOptionsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-textMain">导出日志</h3>
+                <button id="closeExportOptionsBtn" class="text-gray-400 hover:text-gray-500">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="px-6 py-4 overflow-y-auto flex-1">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-textSecondary mb-1">导出格式</label>
+                        <select id="exportFormat" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300">
+                            <option value="csv">CSV</option>
+                            <option value="excel">Excel</option>
+                            <option value="json">JSON</option>
+                            <option value="text">文本文件</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-textSecondary mb-1">导出范围</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="exportRange" value="current" class="w-4 h-4 text-primary focus:ring-primary/50 border-gray-300" checked>
+                                <span class="ml-2 text-sm text-textMain">当前筛选结果</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="exportRange" value="all" class="w-4 h-4 text-primary focus:ring-primary/50 border-gray-300">
+                                <span class="ml-2 text-sm text-textMain">全部日志</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-textSecondary mb-1">包含字段</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="exportFields" value="time" class="w-4 h-4 text-primary focus:ring-primary/50 border-gray-300" checked>
+                                <span class="ml-2 text-sm text-textMain">时间</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="exportFields" value="type" class="w-4 h-4 text-primary focus:ring-primary/50 border-gray-300" checked>
+                                <span class="ml-2 text-sm text-textMain">类型</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="exportFields" value="level" class="w-4 h-4 text-primary focus:ring-primary/50 border-gray-300" checked>
+                                <span class="ml-2 text-sm text-textMain">级别</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="exportFields" value="source" class="w-4 h-4 text-primary focus:ring-primary/50 border-gray-300" checked>
+                                <span class="ml-2 text-sm text-textMain">来源</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="exportFields" value="message" class="w-4 h-4 text-primary focus:ring-primary/50 border-gray-300" checked>
+                                <span class="ml-2 text-sm text-textMain">消息</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="exportFields" value="details" class="w-4 h-4 text-primary focus:ring-primary/50 border-gray-300">
+                                <span class="ml-2 text-sm text-textMain">详细信息</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-2">
+                <button id="cancelExportBtn" class="px-4 py-2 text-textSecondary border border-gray-300 rounded-lg hover:bg-gray-50 transition-all-300">
+                    取消
+                </button>
+                <button id="confirmExportBtn" class="px-4 py-2 bg-success text-white rounded-lg hover:bg-success/90 transition-all-300">
+                    <i class="fa fa-download mr-1"></i>确认导出
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 模拟日志数据，实际应用中会从服务器获取
+        const logData = {
+            1: {
+                time: "2023-11-15 14:32:45",
+                type: "camera",
+                typeText: "摄像头",
+                level: "success",
+                levelText: "成功",
+                source: "CAM-2023001",
+                message: "摄像头连接成功，开始采集图像",
+                details: {
+                    cameraId: "CAM-2023001",
+                    ipAddress: "192.168.1.101",
+                    resolution: "1920x1080",
+                    fps: 30,
+                    status: "online",
+                    connectionTime: "2023-11-15 14:32:45",
+                    lastHeartbeat: "2023-11-15 14:32:45",
+                    errorCode: null,
+                    location: "生产线A-工位1"
+                }
+            },
+            2: {
+                time: "2023-11-15 14:30:12",
+                type: "plc",
+                typeText: "PLC",
+                level: "warning",
+                levelText: "警告",
+                source: "PLC-001",
+                message: "PLC通信延迟超出阈值 (150ms)",
+                details: {
+                    plcId: "PLC-001",
+                    ipAddress: "192.168.1.201",
+                    communicationProtocol: "Modbus TCP",
+                    delay: 150,
+                    threshold: 100,
+                    retries: 3,
+                    status: "warning",
+                    location: "生产线A-控制柜"
+                }
+            },
+            3: {
+                time: "2023-11-15 14:28:55",
+                type: "image",
+                typeText: "图片处理",
+                level: "info",
+                levelText: "信息",
+                source: "IMAGE_PROCESSOR",
+                message: "成功处理图片 20231115_142840.jpg",
+                details: {
+                    filename: "20231115_142840.jpg",
+                    path: "/images/processed/20231115/",
+                    size: "2.5 MB",
+                    processingTime: "120ms",
+                    resolution: "1920x1080",
+                    cameraSource: "CAM-2023001",
+                    processingResult: "success"
+                }
+            },
+            4: {
+                time: "2023-11-15 14:25:30",
+                type: "dataset",
+                typeText: "数据集",
+                level: "success",
+                levelText: "成功",
+                source: "DATASET-202311",
+                message: "数据集更新完成，新增150张图片",
+                details: {
+                    datasetId: "DATASET-202311",
+                    name: "11月份检测数据集",
+                    previousCount: 1250,
+                    newCount: 1400,
+                    addedCount: 150,
+                    removedCount: 0,
+                    updateTime: "2023-11-15 14:25:30",
+                    status: "completed",
+                    path: "/datasets/DATASET-202311/"
+                }
+            },
+            5: {
+                time: "2023-11-15 14:20:18",
+                type: "training",
+                typeText: "模型训练",
+                level: "error",
+                levelText: "错误",
+                source: "TRAINING-20231115-01",
+                message: "模型训练失败：内存不足",
+                details: {
+                    trainingId: "TRAINING-20231115-01",
+                    modelName: "缺陷检测模型v2.0",
+                    datasetUsed: "DATASET-202311",
+                    startTime: "2023-11-15 13:55:40",
+                    endTime: "2023-11-15 14:20:18",
+                    status: "failed",
+                    errorMessage: "内存不足，无法继续训练",
+                    errorCode: "MEM-001",
+                    progress: 45,
+                    allocatedMemory: "8 GB",
+                    requiredMemory: "12 GB"
+                }
+            }
+        };
+
+        // 查看日志详情
+        document.querySelectorAll('.view-log-details').forEach(button => {
+            button.addEventListener('click', function() {
+                const logId = this.getAttribute('data-id');
+                const log = logData[logId];
+                
+                if (log) {
+                    // 填充日志详情
+                    let detailsHtml = `
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-textSecondary">时间</p>
+                                    <p class="font-medium">${log.time}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-textSecondary">类型</p>
+                                    <span class="log-type-badge log-type-${log.type}">${log.typeText}</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-textSecondary">级别</p>
+                                    <span class="status-badge status-${log.level}">${log.levelText}</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-textSecondary">来源</p>
+                                    <p class="font-medium">${log.source}</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="text-sm text-textSecondary">消息</p>
+                                <p class="font-medium">${log.message}</p>
+                            </div>
+                            
+                            <div>
+                                <p class="text-sm text-textSecondary">详细信息</p>
+                                <div class="bg-gray-50 p-4 rounded-lg overflow-x-auto">
+                                    <pre class="whitespace-pre-wrap text-sm">${JSON.stringify(log.details, null, 2)}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('logDetailsContent').innerHTML = detailsHtml;
+                    document.getElementById('logDetailsModal').classList.remove('hidden');
+                }
+            });
+        });
+
+        // 关闭日志详情弹窗
+        document.getElementById('closeLogDetailsBtn').addEventListener('click', function() {
+            document.getElementById('logDetailsModal').classList.add('hidden');
+        });
+        
+        document.getElementById('closeLogDetailsBtnBottom').addEventListener('click', function() {
+            document.getElementById('logDetailsModal').classList.add('hidden');
+        });
+
+        // 打开导出选项弹窗
+        document.getElementById('exportLogsBtn').addEventListener('click', function() {
+            document.getElementById('exportOptionsModal').classList.remove('hidden');
+        });
+
+        // 关闭导出选项弹窗
+        document.getElementById('closeExportOptionsBtn').addEventListener('click', function() {
+            document.getElementById('exportOptionsModal').classList.add('hidden');
+        });
+        
+        document.getElementById('cancelExportBtn').addEventListener('click', function() {
+            document.getElementById('exportOptionsModal').classList.add('hidden');
+        });
+
+        // 确认导出
+        document.getElementById('confirmExportBtn').addEventListener('click', function() {
+            const format = document.getElementById('exportFormat').value;
+            const range = document.querySelector('input[name="exportRange"]:checked').value;
+            const fields = Array.from(document.querySelectorAll('input[name="exportFields"]:checked')).map(checkbox => checkbox.value);
+            
+            // 模拟导出过程
+            alert(`日志导出成功！\n格式: ${format}\n范围: ${range === 'current' ? '当前筛选结果' : '全部日志'}\n字段数: ${fields.length}`);
+            
+            document.getElementById('exportOptionsModal').classList.add('hidden');
+        });
+
+        // 应用筛选
+        document.getElementById('applyFilterBtn').addEventListener('click', function() {
+            const search = document.getElementById('logSearch').value;
+            const type = document.getElementById('logTypeFilter').value;
+            const level = document.getElementById('logLevelFilter').value;
+            const startTime = document.getElementById('startTimeFilter').value;
+            const endTime = document.getElementById('endTimeFilter').value;
+            
+            // 模拟筛选过程
+            alert(`筛选条件已应用！\n搜索: ${search}\n类型: ${type}\n级别: ${level}\n时间范围: ${startTime} - ${endTime}`);
+        });
+
+        // 重置筛选
+        document.getElementById('resetFilterBtn').addEventListener('click', function() {
+            document.getElementById('logSearch').value = '';
+            document.getElementById('logTypeFilter').value = 'all';
+            document.getElementById('logLevelFilter').value = 'all';
+            document.getElementById('startTimeFilter').value = '';
+            document.getElementById('endTimeFilter').value = '';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据集管理 - 表格视图</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#4f46e5',
+                        accent: '#8b5cf6',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        info: '#3b82f6',
+                        dark: '#1e293b',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    },
+                },
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .table-hover-effect {
+                transition: background-color 0.2s ease;
+            }
+            .table-row-selected {
+                background-color: rgba(37, 99, 235, 0.05);
+            }
+            .sort-icon {
+                transition: transform 0.2s ease;
+            }
+            .scrollbar-thin {
+                scrollbar-width: thin;
+            }
+            .scrollbar-thin::-webkit-scrollbar {
+                width: 4px;
+                height: 4px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-thumb {
+                background-color: rgba(156, 163, 175, 0.5);
+                border-radius: 2px;
+            }
+            .data-card {
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+            .data-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            }
+            .fade-in {
+                animation: fadeIn 0.3s ease-in-out;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-dark">
+    <!-- 导航栏 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-database text-primary text-2xl"></i>
+                <h1 class="text-xl font-bold">数据集管理系统</h1>
+            </div>
+            
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="#" class="text-slate-600 hover:text-primary transition-colors">数据概览</a>
+                <a href="#" class="text-primary font-medium">数据集列表</a>
+                <a href="#" class="text-slate-600 hover:text-primary transition-colors">标注管理</a>
+                <a href="#" class="text-slate-600 hover:text-primary transition-colors">导入导出</a>
+                <a href="#" class="text-slate-600 hover:text-primary transition-colors">系统设置</a>
+            </nav>
+            
+            <div class="flex items-center space-x-3">
+                <button class="hidden md:flex items-center space-x-1 text-slate-600 hover:text-primary transition-colors">
+                    <i class="fa fa-bell-o"></i>
+                    <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+                <div class="relative">
+                    <img src="https://picsum.photos/id/1005/200/200" alt="用户头像" class="w-8 h-8 rounded-full object-cover border-2 border-primary">
+                </div>
+                <button class="md:hidden text-slate-700 text-xl">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+        <!-- 页面标题和操作按钮 -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+            <div>
+                <h2 class="text-2xl font-bold">数据集管理</h2>
+                <p class="text-slate-500 mt-1">管理和查看所有数据集的详细信息</p>
+            </div>
+            
+            <div class="flex items-center space-x-3 mt-4 md:mt-0">
+                <button class="px-4 py-2 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors flex items-center space-x-2">
+                    <i class="fa fa-filter"></i>
+                    <span>高级筛选</span>
+                </button>
+                <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center space-x-2">
+                    <i class="fa fa-plus"></i>
+                    <span>创建数据集</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 数据统计卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-xl shadow-card p-5 data-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-500 text-sm">数据集总数</p>
+                        <h3 class="text-2xl font-bold mt-1">32</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-primary">
+                        <i class="fa fa-folder-open text-xl"></i>
+                    </div>
+                </div>
+                <div class="flex items-center mt-4 text-sm">
+                    <span class="text-green-500 flex items-center"><i class="fa fa-arrow-up mr-1"></i> 4</span>
+                    <span class="text-slate-400 ml-2">本月新增</span>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-card p-5 data-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-500 text-sm">图片总数</p>
+                        <h3 class="text-2xl font-bold mt-1">12,548</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-accent">
+                        <i class="fa fa-picture-o text-xl"></i>
+                    </div>
+                </div>
+                <div class="flex items-center mt-4 text-sm">
+                    <span class="text-green-500 flex items-center"><i class="fa fa-arrow-up mr-1"></i> 1,245</span>
+                    <span class="text-slate-400 ml-2">本月新增</span>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-card p-5 data-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-500 text-sm">已标注数据集</p>
+                        <h3 class="text-2xl font-bold mt-1">24</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-success">
+                        <i class="fa fa-check-circle text-xl"></i>
+                    </div>
+                </div>
+                <div class="flex items-center mt-4 text-sm">
+                    <span class="text-green-500 flex items-center"><i class="fa fa-arrow-up mr-1"></i> 3</span>
+                    <span class="text-slate-400 ml-2">本月完成</span>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-card p-5 data-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-500 text-sm">标注完成率</p>
+                        <h3 class="text-2xl font-bold mt-1">75%</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-warning">
+                        <i class="fa fa-line-chart text-xl"></i>
+                    </div>
+                </div>
+                <div class="flex items-center mt-4 text-sm">
+                    <span class="text-green-500 flex items-center"><i class="fa fa-arrow-up mr-1"></i> 5%</span>
+                    <span class="text-slate-400 ml-2">较上月</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 搜索和工具栏 -->
+        <div class="bg-white rounded-xl shadow-sm p-5 mb-6">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex flex-1 items-center space-x-3">
+                    <div class="relative flex-1">
+                        <input type="text" placeholder="搜索数据集名称、ID或描述..." 
+                               class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                        <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                    </div>
+                    
+                    <div class="relative">
+                        <select class="appearance-none pl-4 pr-10 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white">
+                            <option>所有状态</option>
+                            <option>已完成</option>
+                            <option>进行中</option>
+                            <option>未开始</option>
+                            <option>已归档</option>
+                        </select>
+                        <i class="fa fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-1">
+                        <button class="p-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
+                            <i class="fa fa-download"></i>
+                        </button>
+                        <button class="p-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
+                            <i class="fa fa-upload"></i>
+                        </button>
+                        <button class="p-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
+                            <i class="fa fa-refresh"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="relative">
+                        <select class="appearance-none pl-4 pr-10 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all bg-white">
+                            <option>10条/页</option>
+                            <option>20条/页</option>
+                            <option>50条/页</option>
+                            <option>100条/页</option>
+                        </select>
+                        <i class="fa fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 批量操作栏 (默认隐藏) -->
+            <div class="mt-4 pt-4 border-t border-slate-200 hidden" id="batchActions">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <span class="text-slate-700"><span id="selectedCount">0</span> 个数据集已选择</span>
+                        <button class="text-primary hover:text-primary/80 transition-colors">全选</button>
+                        <button class="text-slate-600 hover:text-slate-900 transition-colors">取消选择</button>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors flex items-center space-x-1 text-sm">
+                            <i class="fa fa-tag"></i>
+                            <span>添加标签</span>
+                        </button>
+                        <button class="px-3 py-1.5 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors flex items-center space-x-1 text-sm">
+                            <i class="fa fa-archive"></i>
+                            <span>归档</span>
+                        </button>
+                        <button class="px-3 py-1.5 border border-red-200 rounded-lg text-red-500 hover:bg-red-50 transition-colors flex items-center space-x-1 text-sm">
+                            <i class="fa fa-trash-o"></i>
+                            <span>删除</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 数据集表格 -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+            <div class="overflow-x-auto scrollbar-thin">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-slate-50 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                            <th class="px-6 py-3">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="w-4 h-4 accent-primary rounded border-slate-300" id="selectAll">
+                                </div>
+                            </th>
+                            <th class="px-6 py-3">
+                                <div class="flex items-center cursor-pointer" onclick="sortTable(1)">
+                                    ID
+                                    <i class="fa fa-sort ml-1 text-slate-400 sort-icon"></i>
+                                </div>
+                            </th>
+                            <th class="px-6 py-3">
+                                <div class="flex items-center cursor-pointer" onclick="sortTable(2)">
+                                    数据集名称
+                                    <i class="fa fa-sort ml-1 text-slate-400 sort-icon"></i>
+                                </div>
+                            </th>
+                            <th class="px-6 py-3">
+                                <div class="flex items-center cursor-pointer" onclick="sortTable(3)">
+                                    描述
+                                    <i class="fa fa-sort ml-1 text-slate-400 sort-icon"></i>
+                                </div>
+                            </th>
+                            <th class="px-6 py-3">
+                                <div class="flex items-center cursor-pointer" onclick="sortTable(4)">
+                                    图片数量
+                                    <i class="fa fa-sort ml-1 text-slate-400 sort-icon"></i>
+                                </div>
+                            </th>
+                            <th class="px-6 py-3">
+                                <div class="flex items-center cursor-pointer" onclick="sortTable(5)">
+                                    标注状态
+                                    <i class="fa fa-sort ml-1 text-slate-400 sort-icon"></i>
+                                </div>
+                            </th>
+                            <th class="px-6 py-3">
+                                <div class="flex items-center cursor-pointer" onclick="sortTable(6)">
+                                    创建时间
+                                    <i class="fa fa-sort ml-1 text-slate-400 sort-icon"></i>
+                                </div>
+                            </th>
+                            <th class="px-6 py-3">
+                                <div class="flex items-center cursor-pointer" onclick="sortTable(7)">
+                                    更新时间
+                                    <i class="fa fa-sort-desc ml-1 text-primary sort-icon"></i>
+                                </div>
+                            </th>
+                            <th class="px-6 py-3">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        <!-- 数据集行 1 -->
+                        <tr class="table-hover-effect hover:bg-slate-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="dataset-checkbox w-4 h-4 accent-primary rounded border-slate-300">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">DS-20230601-001</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center mr-3">
+                                        <i class="fa fa-user text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-sm">人脸识别数据集</div>
+                                        <div class="text-xs text-slate-500">
+                                            <span class="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded">人脸</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate">包含不同种族、年龄和性别的人脸图像，用于训练人脸识别模型</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2,548</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    已完成
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-01</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-28</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button class="text-primary hover:text-primary/80 transition-colors">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 数据集行 2 -->
+                        <tr class="table-hover-effect hover:bg-slate-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="dataset-checkbox w-4 h-4 accent-primary rounded border-slate-300">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">DS-20230605-002</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center mr-3">
+                                        <i class="fa fa-car text-accent"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-sm">车辆检测数据集</div>
+                                        <div class="text-xs text-slate-500">
+                                            <span class="bg-purple-100 text-purple-600 text-xs px-2 py-0.5 rounded">车辆</span>
+                                            <span class="bg-indigo-100 text-indigo-600 text-xs px-2 py-0.5 rounded">交通</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate">包含各种类型的车辆图像，用于训练车辆检测和分类模型</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">1,875</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    进行中
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-05</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-27</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button class="text-primary hover:text-primary/80 transition-colors">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 数据集行 3 -->
+                        <tr class="table-hover-effect hover:bg-slate-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="dataset-checkbox w-4 h-4 accent-primary rounded border-slate-300">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">DS-20230610-003</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-green-100 rounded-md flex items-center justify-center mr-3">
+                                        <i class="fa fa-tree text-success"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-sm">自然场景分类</div>
+                                        <div class="text-xs text-slate-500">
+                                            <span class="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded">自然</span>
+                                            <span class="bg-teal-100 text-teal-600 text-xs px-2 py-0.5 rounded">场景</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate">包含森林、山脉、湖泊等自然场景的图像数据集</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">3,245</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    已完成
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-10</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-25</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button class="text-primary hover:text-primary/80 transition-colors">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 数据集行 4 -->
+                        <tr class="table-hover-effect hover:bg-slate-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="dataset-checkbox w-4 h-4 accent-primary rounded border-slate-300">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">DS-20230615-004</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-red-100 rounded-md flex items-center justify-center mr-3">
+                                        <i class="fa fa-cutlery text-danger"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-sm">食物图像数据集</div>
+                                        <div class="text-xs text-slate-500">
+                                            <span class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded">食物</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate">包含各种类型的食物图像，用于训练食物识别和分类模型</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">1,568</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    进行中
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-15</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-24</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button class="text-primary hover:text-primary/80 transition-colors">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 数据集行 5 -->
+                        <tr class="table-hover-effect hover:bg-slate-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="dataset-checkbox w-4 h-4 accent-primary rounded border-slate-300">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">DS-20230620-005</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-amber-100 rounded-md flex items-center justify-center mr-3">
+                                        <i class="fa fa-building text-warning"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-sm">城市建筑数据集</div>
+                                        <div class="text-xs text-slate-500">
+                                            <span class="bg-amber-100 text-amber-600 text-xs px-2 py-0.5 rounded">建筑</span>
+                                            <span class="bg-violet-100 text-violet-600 text-xs px-2 py-0.5 rounded">城市</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate">包含各种城市建筑和天际线的图像数据集</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2,145</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    未开始
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-20</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-20</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button class="text-primary hover:text-primary/80 transition-colors">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 数据集行 6 -->
+                        <tr class="table-hover-effect hover:bg-slate-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="dataset-checkbox w-4 h-4 accent-primary rounded border-slate-300">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">DS-20230515-006</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-teal-100 rounded-md flex items-center justify-center mr-3">
+                                        <i class="fa fa-paw text-teal-600"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-sm">动物识别数据集</div>
+                                        <div class="text-xs text-slate-500">
+                                            <span class="bg-teal-100 text-teal-600 text-xs px-2 py-0.5 rounded">动物</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate">包含各种野生动物和宠物的图像数据集</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">1,127</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    已归档
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-05-15</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-10</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button class="text-primary hover:text-primary/80 transition-colors">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 数据集行 7 -->
+                        <tr class="table-hover-effect hover:bg-slate-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="dataset-checkbox w-4 h-4 accent-primary rounded border-slate-300">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">DS-20230625-007</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-indigo-100 rounded-md flex items-center justify-center mr-3">
+                                        <i class="fa fa-book text-indigo-600"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-sm">文档识别数据集</div>
+                                        <div class="text-xs text-slate-500">
+                                            <span class="bg-indigo-100 text-indigo-600 text-xs px-2 py-0.5 rounded">文档</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate">包含各种类型的文档图像，用于训练文档分析和OCR模型</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">876</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    进行中
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-25</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-29</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button class="text-primary hover:text-primary/80 transition-colors">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 数据集行 8 -->
+                        <tr class="table-hover-effect hover:bg-slate-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="dataset-checkbox w-4 h-4 accent-primary rounded border-slate-300">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">DS-20230525-008</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-rose-100 rounded-md flex items-center justify-center mr-3">
+                                        <i class="fa fa-shopping-bag text-rose-600"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-sm">商品识别数据集</div>
+                                        <div class="text-xs text-slate-500">
+                                            <span class="bg-rose-100 text-rose-600 text-xs px-2 py-0.5 rounded">商品</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate">包含各种零售商品的图像数据集，用于训练商品识别模型</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2,345</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    已完成
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-05-25</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-15</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button class="text-primary hover:text-primary/80 transition-colors">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 数据集行 9 -->
+                        <tr class="table-hover-effect hover:bg-slate-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="dataset-checkbox w-4 h-4 accent-primary rounded border-slate-300">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">DS-20230430-009</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-cyan-100 rounded-md flex items-center justify-center mr-3">
+                                        <i class="fa fa-medkit text-cyan-600"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-sm">医学影像数据集</div>
+                                        <div class="text-xs text-slate-500">
+                                            <span class="bg-cyan-100 text-cyan-600 text-xs px-2 py-0.5 rounded">医学</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate">包含X光片、CT扫描等医学影像数据，用于医学图像分析</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">568</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    已归档
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-04-30</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-05-20</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button class="text-primary hover:text-primary/80 transition-colors">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- 数据集行 10 -->
+                        <tr class="table-hover-effect hover:bg-slate-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="dataset-checkbox w-4 h-4 accent-primary rounded border-slate-300">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">DS-20230628-010</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-violet-100 rounded-md flex items-center justify-center mr-3">
+                                        <i class="fa fa-mobile text-violet-600"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-sm">电子产品数据集</div>
+                                        <div class="text-xs text-slate-500">
+                                            <span class="bg-violet-100 text-violet-600 text-xs px-2 py-0.5 rounded">电子</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate">包含各种电子产品的图像数据集，用于产品识别和分类</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">987</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    未开始
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-28</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">2023-06-28</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center space-x-2">
+                                    <button class="text-primary hover:text-primary/80 transition-colors">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-pencil"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                    <button class="text-slate-600 hover:text-slate-900 transition-colors">
+                                        <i class="fa fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 分页 -->
+        <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+            <div class="text-sm text-slate-500">
+                显示 <span class="font-medium">1</span> 到 <span class="font-medium">10</span> 条，共 <span class="font-medium">32</span> 条记录
+            </div>
+            
+            <nav class="flex items-center space-x-1">
+                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
+                    <i class="fa fa-chevron-left text-xs"></i>
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white">
+                    1
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors">
+                    2
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors">
+                    3
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors">
+                    4
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors">
+                    5
+                </button>
+                <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
+                    <i class="fa fa-chevron-right text-xs"></i>
+                </button>
+            </nav>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-8 mt-12">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center space-x-2 mb-4 md:mb-0">
+                    <i class="fa fa-database text-primary text-2xl"></i>
+                    <h2 class="text-xl font-bold">数据集管理系统</h2>
+                </div>
+                
+                <div class="flex space-x-6">
+                    <a href="#" class="text-slate-300 hover:text-white transition-colors">
+                        <i class="fa fa-github text-xl"></i>
+                    </a>
+                    <a href="#" class="text-slate-300 hover:text-white transition-colors">
+                        <i class="fa fa-twitter text-xl"></i>
+                    </a>
+                    <a href="#" class="text-slate-300 hover:text-white transition-colors">
+                        <i class="fa fa-linkedin text-xl"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-slate-700 text-center text-slate-400 text-sm">
+                <p>© 2023 数据集管理系统. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 脚本 -->
+    <script>
+        // 导航栏滚动效果
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 10) {
+                header.classList.add('py-2', 'shadow');
+                header.classList.remove('py-3', 'shadow-sm');
+            } else {
+                header.classList.add('py-3', 'shadow-sm');
+                header.classList.remove('py-2', 'shadow');
+            }
+        });
+
+        // 处理数据集选择逻辑
+        const checkboxes = document.querySelectorAll('.dataset-checkbox');
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const batchActions = document.getElementById('batchActions');
+        const selectedCount = document.getElementById('selectedCount');
+        let count = 0;
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    count++;
+                    this.closest('tr').classList.add('table-row-selected');
+                } else {
+                    count--;
+                    this.closest('tr').classList.remove('table-row-selected');
+                }
+                
+                updateBatchActions();
+            });
+        });
+
+        // 全选功能
+        selectAllCheckbox.addEventListener('change', function() {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+                if (this.checked) {
+                    checkbox.closest('tr').classList.add('table-row-selected');
+                } else {
+                    checkbox.closest('tr').classList.remove('table-row-selected');
+                }
+            });
+            
+            count = this.checked ? checkboxes.length : 0;
+            updateBatchActions();
+        });
+
+        // 更新批量操作栏显示
+        function updateBatchActions() {
+            if (count > 0) {
+                batchActions.classList.remove('hidden');
+                batchActions.classList.add('fade-in');
+                selectedCount.textContent = count;
+            } else {
+                batchActions.classList.add('hidden');
+                batchActions.classList.remove('fade-in');
+            }
+        }
+
+        // 表格排序功能（示例实现）
+        function sortTable(columnIndex) {
+            // 在实际应用中，这里会实现真正的表格排序逻辑
+            // 这里只是演示排序图标变化
+            
+            // 重置所有排序图标
+            document.querySelectorAll('th i.sort-icon').forEach(icon => {
+                icon.className = 'fa fa-sort ml-1 text-slate-400 sort-icon';
+            });
+            
+            // 设置当前列的排序图标
+            const currentIcon = document.querySelectorAll('th')[columnIndex].querySelector('i.sort-icon');
+            currentIcon.className = 'fa fa-sort-asc ml-1 text-primary sort-icon';
+            
+            // 这里可以添加实际的排序逻辑
+            console.log(`排序第${columnIndex}列`);
+        }
+
+        // 表格行悬停效果增强
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('mouseenter', function() {
+                const actionButtons = this.querySelector('td:last-child');
+                if (actionButtons) {
+                    actionButtons.style.opacity = '1';
+                }
+            });
+            
+            row.addEventListener('mouseleave', function() {
+                const actionButtons = this.querySelector('td:last-child');
+                if (actionButtons && !this.classList.contains('table-row-selected')) {
+                    actionButtons.style.opacity = '0.7';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

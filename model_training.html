@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型训练平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#0E42D2',
+                        success: '#00B42A',
+                        warning: '#FF7D00',
+                        danger: '#F53F3F',
+                        info: '#86909C',
+                        bgLight: '#F2F3F5',
+                        bgDark: '#1D2129',
+                        textMain: '#1D2129',
+                        textSecondary: '#4E5969',
+                        borderColor: '#C9CDD4',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 2px 14px 0 rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 6px 20px 0 rgba(0, 0, 0, 0.08)',
+                    }
+                },
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+            .progress-bar {
+                transition: width 1s ease-in-out;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-textMain min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-md fixed w-full top-0 left-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-cubes text-primary text-2xl"></i>
+                <h1 class="text-xl font-bold text-primary">视觉检测平台</h1>
+            </div>
+            
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="home.html" class="text-textSecondary hover:text-primary transition-all-300">首页</a>
+                <a href="datasets.html" class="text-textSecondary hover:text-primary transition-all-300">数据集</a>
+                <a href="model_training.html" class="text-primary font-medium border-b-2 border-primary pb-1">模型训练</a>
+                <a href="gallery_management.html" class="text-textSecondary hover:text-primary transition-all-300">模型库</a>
+            </nav>
+            
+            <div class="flex items-center space-x-4">
+                <button class="text-textSecondary hover:text-primary transition-all-300">
+                    <i class="fa fa-bell-o text-xl"></i>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <img src="https://picsum.photos/id/64/40/40" alt="用户头像" class="w-8 h-8 rounded-full border-2 border-primary">
+                    <span class="hidden md:inline text-sm font-medium">管理员</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 pt-24 pb-12">
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold mb-2">模型训练管理</h2>
+            <p class="text-textSecondary">创建和管理您的模型训练任务</p>
+        </div>
+
+        <!-- 页面主体 -->
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- 左侧：训练队列 -->
+            <div class="w-full lg:w-7/12">
+                <div class="bg-white rounded-xl shadow-card p-6 mb-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold">训练队列</h3>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 text-sm text-primary border border-primary rounded-lg hover:bg-primary/5 transition-all-300">
+                                <i class="fa fa-refresh mr-1"></i>刷新
+                            </button>
+                            <button class="px-3 py-1 text-sm text-primary border border-primary rounded-lg hover:bg-primary/5 transition-all-300">
+                                <i class="fa fa-filter mr-1"></i>筛选
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 训练任务列表 -->
+                    <div class="space-y-4">
+                        <!-- 进行中的任务 -->
+                        <div class="border border-primary/20 rounded-lg p-4 hover:shadow-card-hover transition-all-300 bg-primary/5">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 class="font-medium">缺陷检测模型训练</h4>
+                                    <p class="text-sm text-textSecondary mt-1">数据集：电子元件缺陷数据集 | 模型：Faster R-CNN</p>
+                                </div>
+                                <span class="px-2 py-1 bg-primary/20 text-primary text-xs rounded-full">进行中</span>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>进度</span>
+                                    <span class="font-medium">65%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-primary h-2 rounded-full progress-bar" style="width: 65%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-textSecondary">
+                                <div>epoch: 32/50</div>
+                                <div>loss: 0.042</div>
+                                <div>准确率: 92.3%</div>
+                                <div>剩余时间: 约15分钟</div>
+                            </div>
+                        </div>
+
+                        <!-- 等待中的任务 -->
+                        <div class="border border-borderColor rounded-lg p-4 hover:shadow-card-hover transition-all-300">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 class="font-medium">表面划痕检测训练</h4>
+                                    <p class="text-sm text-textSecondary mt-1">数据集：金属表面划痕数据集 | 模型：YOLOv5</p>
+                                </div>
+                                <span class="px-2 py-1 bg-info/20 text-info text-xs rounded-full">等待中</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-textSecondary">
+                                <div>优先级: 高</div>
+                                <div>等待时间: 已等待12分钟</div>
+                                <div>预计开始: 5分钟后</div>
+                            </div>
+                        </div>
+
+                        <!-- 已完成的任务 -->
+                        <div class="border border-success/20 rounded-lg p-4 hover:shadow-card-hover transition-all-300 bg-success/5">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 class="font-medium">字符识别模型训练</h4>
+                                    <p class="text-sm text-textSecondary mt-1">数据集：OCR字符数据集 | 模型：ResNet+CTC</p>
+                                </div>
+                                <span class="px-2 py-1 bg-success/20 text-success text-xs rounded-full">已完成</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-textSecondary">
+                                <div>完成时间: 今天 09:45</div>
+                                <div>准确率: 98.7%</div>
+                                <div>训练时长: 2小时15分钟</div>
+                            </div>
+                        </div>
+
+                        <!-- 失败的任务 -->
+                        <div class="border border-danger/20 rounded-lg p-4 hover:shadow-card-hover transition-all-300 bg-danger/5">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 class="font-medium">目标计数模型训练</h4>
+                                    <p class="text-sm text-textSecondary mt-1">数据集：零件计数数据集 | 模型：Mask R-CNN</p>
+                                </div>
+                                <span class="px-2 py-1 bg-danger/20 text-danger text-xs rounded-full">失败</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-textSecondary">
+                                <div>失败原因: 内存不足</div>
+                                <div><button class="text-primary hover:underline">查看详情</button></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 分页控件 -->
+                    <div class="flex justify-between items-center mt-6 text-sm">
+                        <div class="text-textSecondary">显示 1-4 条，共 24 条</div>
+                        <div class="flex space-x-1">
+                            <button class="w-8 h-8 flex items-center justify-center rounded border border-borderColor text-textSecondary hover:border-primary hover:text-primary transition-all-300">
+                                <i class="fa fa-angle-left"></i>
+                            </button>
+                            <button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-white">1</button>
+                            <button class="w-8 h-8 flex items-center justify-center rounded border border-borderColor hover:border-primary hover:text-primary transition-all-300">2</button>
+                            <button class="w-8 h-8 flex items-center justify-center rounded border border-borderColor hover:border-primary hover:text-primary transition-all-300">3</button>
+                            <button class="w-8 h-8 flex items-center justify-center rounded border border-borderColor text-textSecondary hover:border-primary hover:text-primary transition-all-300">
+                                <i class="fa fa-angle-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：新建训练任务 -->
+            <div class="w-full lg:w-5/12">
+                <div class="bg-white rounded-xl shadow-card p-6">
+                    <h3 class="text-lg font-bold mb-6">新建训练任务</h3>
+                    
+                    <!-- 任务表单 -->
+                    <form id="trainForm" class="space-y-5">
+                        <!-- 任务名称 -->
+                        <div>
+                            <label class="block text-sm font-medium mb-1" for="taskName">任务名称</label>
+                            <input type="text" id="taskName" class="w-full px-4 py-2 border border-borderColor rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300" placeholder="请输入任务名称">
+                        </div>
+
+                        <!-- 数据集选择 -->
+                        <div>
+                            <label class="block text-sm font-medium mb-1" for="dataset">选择数据集</label>
+                            <div class="relative">
+                                <select id="dataset" class="w-full px-4 py-2 border border-borderColor rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300">
+                                    <option value="">请选择数据集</option>
+                                    <option value="dataset1">电子元件缺陷数据集 (2,500张图像)</option>
+                                    <option value="dataset2">金属表面划痕数据集 (4,200张图像)</option>
+                                    <option value="dataset3">OCR字符数据集 (10,000张图像)</option>
+                                    <option value="dataset4">零件计数数据集 (3,800张图像)</option>
+                                    <option value="dataset5">PCB板缺陷数据集 (6,100张图像)</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-textSecondary">
+                                    <i class="fa fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 模型选择 -->
+                        <div>
+                            <label class="block text-sm font-medium mb-1" for="model">选择模型</label>
+                            <div class="relative">
+                                <select id="model" class="w-full px-4 py-2 border border-borderColor rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300">
+                                    <option value="">请选择模型</option>
+                                    <option value="faster-rcnn">Faster R-CNN</option>
+                                    <option value="yolov5">YOLOv5</option>
+                                    <option value="yolov7">YOLOv7</option>
+                                    <option value="mask-rcnn">Mask R-CNN</option>
+                                    <option value="resnet">ResNet</option>
+                                    <option value="efficientnet">EfficientNet</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-textSecondary">
+                                    <i class="fa fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 预训练模型 -->
+                        <div>
+                            <label class="block text-sm font-medium mb-1" for="pretrainedModel">预训练模型</label>
+                            <div class="relative">
+                                <select id="pretrainedModel" class="w-full px-4 py-2 border border-borderColor rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300">
+                                    <option value="">无预训练模型</option>
+                                    <option value="coco">COCO预训练</option>
+                                    <option value="imagenet">ImageNet预训练</option>
+                                    <option value="custom">自定义预训练模型...</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-textSecondary">
+                                    <i class="fa fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 超参数配置 -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-sm font-medium" for="hyperparams">超参数配置</label>
+                                <button type="button" class="text-xs text-primary hover:underline">高级配置</button>
+                            </div>
+                            
+                            <!-- 基础超参数 -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs text-textSecondary mb-1" for="epochs">训练轮次</label>
+                                    <input type="number" id="epochs" class="w-full px-3 py-1.5 border border-borderColor rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300" placeholder="50" value="50">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-textSecondary mb-1" for="batchSize">批次大小</label>
+                                    <input type="number" id="batchSize" class="w-full px-3 py-1.5 border border-borderColor rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300" placeholder="16" value="16">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-textSecondary mb-1" for="learningRate">学习率</label>
+                                    <input type="text" id="learningRate" class="w-full px-3 py-1.5 border border-borderColor rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300" placeholder="0.001" value="0.001">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-textSecondary mb-1" for="testSplit">测试集比例</label>
+                                    <input type="text" id="testSplit" class="w-full px-3 py-1.5 border border-borderColor rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300" placeholder="0.2" value="0.2">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 训练设置 -->
+                        <div class="pt-2">
+                            <div class="flex items-center space-x-2 mb-3">
+                                <input type="checkbox" id="earlyStop" class="w-4 h-4 text-primary border-borderColor rounded focus:ring-primary">
+                                <label for="earlyStop" class="text-sm">启用早停策略</label>
+                            </div>
+                            <div class="flex items-center space-x-2 mb-3">
+                                <input type="checkbox" id="saveBest" class="w-4 h-4 text-primary border-borderColor rounded focus:ring-primary">
+                                <label for="saveBest" class="text-sm">仅保存最佳模型</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="augmentation" class="w-4 h-4 text-primary border-borderColor rounded focus:ring-primary" checked>
+                                <label for="augmentation" class="text-sm">启用数据增强</label>
+                            </div>
+                        </div>
+
+                        <!-- 提交按钮 -->
+                        <div class="pt-4">
+                            <button type="submit" class="w-full py-3 bg-primary hover:bg-secondary text-white font-medium rounded-lg transition-all-300 flex items-center justify-center">
+                                <i class="fa fa-play-circle mr-2"></i>开始训练
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-borderColor py-6">
+        <div class="container mx-auto px-4 text-center text-textSecondary text-sm">
+            <p>© 2023 视觉检测平台 - 版权所有</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 模拟表单提交
+        document.getElementById('trainForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 模拟提交成功
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>提交中...';
+            
+            // 模拟请求延迟
+            setTimeout(() => {
+                // 显示成功提示
+                alert('训练任务已创建成功！');
+                
+                // 重置按钮状态
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                
+                // 重置表单
+                this.reset();
+            }, 1500);
+        });
+
+        // 模拟进度条动画
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBars = document.querySelectorAll('.progress-bar');
+            
+            // 为每个进度条设置随机初始宽度
+            progressBars.forEach(bar => {
+                const targetWidth = bar.style.width;
+                bar.style.width = '0%';
+                
+                // 延迟启动动画
+                setTimeout(() => {
+                    bar.style.width = targetWidth;
+                }, 500);
+            });
+        });
+
+        // 导航栏滚动效果
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 10) {
+                header.classList.add('shadow-lg');
+                header.classList.add('py-2');
+                header.classList.remove('py-3');
+            } else {
+                header.classList.remove('shadow-lg');
+                header.classList.add('py-3');
+                header.classList.remove('py-2');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摄像头详情</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+        }
+        .image-container {
+            position: relative;
+            background-color: #000;
+        }
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            font-size: 12px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-warning {
+            background-color: #f59e0b;
+            color: white;
+        }
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex flex-col">
+        <!-- 顶部导航 -->
+        <header class="bg-blue-600 text-white p-4 shadow-md">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-2xl font-bold"><i class="fa fa-video-camera mr-2"></i>摄像头详情</h1>
+                <button id="backBtn" class="bg-white text-blue-600 px-4 py-2 rounded-md font-medium hover:bg-blue-50 transition"><i class="fa fa-arrow-left mr-1"></i>返回列表</button>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 container mx-auto p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 左侧：摄像头基本信息 -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- 基本信息卡片 -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-lg font-bold mb-4 pb-2 border-b border-gray-200"><i class="fa fa-info-circle mr-2"></i>基本信息</h2>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">设备名:</span>
+                                <span id="deviceName" class="font-medium"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">序列号:</span>
+                                <span id="serialNumber" class="font-medium"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">工位号:</span>
+                                <span id="workstation" class="font-medium"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">类型:</span>
+                                <span id="cameraType" class="font-medium"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">IP地址:</span>
+                                <span id="ipAddress" class="font-medium"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">状态:</span>
+                                <span id="status" class="font-medium"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- IP配置卡片 -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-lg font-bold mb-4 pb-2 border-b border-gray-200"><i class="fa fa-wifi mr-2"></i>IP配置</h2>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">IP地址</label>
+                                <input type="text" id="ipConfig" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">子网掩码</label>
+                                <input type="text" id="subnetMask" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">默认网关</label>
+                                <input type="text" id="defaultGateway" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <button id="saveIpBtn" class="w-full py-2 rounded-md btn-primary transition-colors mt-2">保存配置</button>
+                        </div>
+                    </div>
+
+                    <!-- 参数配置卡片 -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-lg font-bold mb-4 pb-2 border-b border-gray-200"><i class="fa fa-sliders mr-2"></i>参数配置</h2>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">分辨率</label>
+                                <select id="resolution" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="1920x1080">1920x1080 (1080p)</option>
+                                    <option value="1280x720">1280x720 (720p)</option>
+                                    <option value="640x480">640x480 (VGA)</option>
+                                    <option value="320x240">320x240 (QVGA)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">帧率</label>
+                                <select id="frameRate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="30">30 FPS</option>
+                                    <option value="25">25 FPS</option>
+                                    <option value="15">15 FPS</option>
+                                    <option value="10">10 FPS</option>
+                                    <option value="5">5 FPS</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">触发模式</label>
+                                <select id="triggerMode" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="continuous">连续触发</option>
+                                    <option value="manual">手动触发</option>
+                                    <option value="external">外部触发</option>
+                                </select>
+                            </div>
+                            <button id="saveParamsBtn" class="w-full py-2 rounded-md btn-primary transition-colors mt-2">保存参数</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：取像内容 -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- 图像预览 -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="image-container aspect-video flex items-center justify-center">
+                            <img id="cameraImage" src="" alt="摄像头图像" class="max-w-full max-h-full object-contain">
+                            <div id="noImage" class="text-center text-gray-500">
+                                <i class="fa fa-camera text-5xl mb-4"></i>
+                                <p class="text-xl">未拍摄图像</p>
+                                <p class="text-sm mt-2">点击下方按钮进行拍摄</p>
+                            </div>
+                            <div class="image-overlay hidden" id="imageInfo">
+                                <div class="flex justify-between">
+                                    <span>分辨率: <span id="imageResolution"></span></span>
+                                    <span>图像大小: <span id="imageSize"></span></span>
+                                </div>
+                                <div class="text-right mt-1">
+                                    <span id="imageTimestamp"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 控制按钮 -->
+                        <div class="p-4 bg-gray-50 border-t border-gray-200">
+                            <div class="flex flex-wrap gap-3 items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <button id="captureBtn" class="px-4 py-2 rounded-md btn-primary transition-colors flex items-center">
+                                        <i class="fa fa-camera mr-2"></i>拍摄图像
+                                    </button>
+                                    <div class="flex items-center gap-2">
+                                        <label for="delayCapture" class="text-sm font-medium text-gray-700">延迟:</label>
+                                        <input type="number" id="delayCapture" min="0" max="10" value="0" class="w-16 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <span class="text-sm text-gray-500">秒</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <button id="saveImageBtn" class="px-4 py-2 rounded-md btn-warning transition-colors flex items-center" disabled>
+                                        <i class="fa fa-save mr-2"></i>保存图像
+                                    </button>
+                                    <button id="refreshImageBtn" class="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors flex items-center">
+                                        <i class="fa fa-refresh mr-2"></i>刷新
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 图像历史记录 -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-lg font-bold mb-4 pb-2 border-b border-gray-200"><i class="fa fa-history mr-2"></i>图像历史记录</h2>
+                        <div id="imageHistory" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                            <!-- 历史图像将通过JavaScript动态生成 -->
+                            <div class="text-center text-gray-500 py-10 col-span-full">
+                                <i class="fa fa-clock-o text-3xl mb-2"></i>
+                                <p>暂无历史图像</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="bg-gray-800 text-white p-3 text-center text-sm">
+            <p>© 2023 摄像头管理系统 | 版本 1.0.0</p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM 元素
+        const backBtn = document.getElementById('backBtn');
+        const deviceNameEl = document.getElementById('deviceName');
+        const serialNumberEl = document.getElementById('serialNumber');
+        const workstationEl = document.getElementById('workstation');
+        const cameraTypeEl = document.getElementById('cameraType');
+        const ipAddressEl = document.getElementById('ipAddress');
+        const statusEl = document.getElementById('status');
+        const ipConfigEl = document.getElementById('ipConfig');
+        const subnetMaskEl = document.getElementById('subnetMask');
+        const defaultGatewayEl = document.getElementById('defaultGateway');
+        const saveIpBtn = document.getElementById('saveIpBtn');
+        const resolutionEl = document.getElementById('resolution');
+        const frameRateEl = document.getElementById('frameRate');
+        const triggerModeEl = document.getElementById('triggerMode');
+        const saveParamsBtn = document.getElementById('saveParamsBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const delayCaptureEl = document.getElementById('delayCapture');
+        const saveImageBtn = document.getElementById('saveImageBtn');
+        const refreshImageBtn = document.getElementById('refreshImageBtn');
+        const cameraImageEl = document.getElementById('cameraImage');
+        const noImageEl = document.getElementById('noImage');
+        const imageInfoEl = document.getElementById('imageInfo');
+        const imageResolutionEl = document.getElementById('imageResolution');
+        const imageSizeEl = document.getElementById('imageSize');
+        const imageTimestampEl = document.getElementById('imageTimestamp');
+        const imageHistoryEl = document.getElementById('imageHistory');
+
+        // 模拟摄像头数据
+        const cameras = [
+            { id: 1, serialNumber: 'CAM-2023001', deviceName: '主入口摄像头', ipAddress: '192.168.1.101', workstation: 'workstation1', status: 'online', type: '网络摄像头' },
+            { id: 2, serialNumber: 'CAM-2023002', deviceName: '停车场摄像头', ipAddress: '192.168.1.102', workstation: 'workstation2', status: 'online', type: '网络摄像头' },
+            { id: 3, serialNumber: 'CAM-2023003', deviceName: '仓库摄像头', ipAddress: '192.168.1.103', workstation: 'workstation3', status: 'offline', type: '模拟摄像头' },
+            { id: 4, serialNumber: 'CAM-2023004', deviceName: '电梯摄像头', ipAddress: '192.168.1.104', workstation: 'workstation1', status: 'online', type: '网络摄像头' },
+            { id: 5, serialNumber: 'CAM-2023005', deviceName: '车间摄像头', ipAddress: '192.168.1.105', workstation: 'workstation4', status: 'warning', type: '高清摄像头' },
+            { id: 6, serialNumber: 'CAM-2023006', deviceName: '会议室摄像头', ipAddress: '192.168.1.106', workstation: 'workstation5', status: 'online', type: '全景摄像头' },
+            { id: 7, serialNumber: 'CAM-2023007', deviceName: '后门摄像头', ipAddress: '192.168.1.107', workstation: 'workstation2', status: 'offline', type: '网络摄像头' },
+            { id: 8, serialNumber: 'CAM-2023008', deviceName: '财务室摄像头', ipAddress: '192.168.1.108', workstation: 'workstation5', status: 'online', type: '半球摄像头' },
+            { id: 9, serialNumber: 'CAM-2023009', deviceName: '服务器机房摄像头', ipAddress: '192.168.1.109', workstation: 'workstation3', status: 'warning', type: '红外摄像头' },
+            { id: 10, serialNumber: 'CAM-2023010', deviceName: '研发部摄像头', ipAddress: '192.168.1.110', workstation: 'workstation4', status: 'online', type: '网络摄像头' }
+        ];
+
+        // 模拟IP配置数据
+        const ipConfigurations = {
+            1: { ip: '192.168.1.101', subnet: '255.255.255.0', gateway: '192.168.1.1' },
+            2: { ip: '192.168.1.102', subnet: '255.255.255.0', gateway: '192.168.1.1' },
+            3: { ip: '192.168.1.103', subnet: '255.255.255.0', gateway: '192.168.1.1' },
+            4: { ip: '192.168.1.104', subnet: '255.255.255.0', gateway: '192.168.1.1' },
+            5: { ip: '192.168.1.105', subnet: '255.255.255.0', gateway: '192.168.1.1' },
+            6: { ip: '192.168.1.106', subnet: '255.255.255.0', gateway: '192.168.1.1' },
+            7: { ip: '192.168.1.107', subnet: '255.255.255.0', gateway: '192.168.1.1' },
+            8: { ip: '192.168.1.108', subnet: '255.255.255.0', gateway: '192.168.1.1' },
+            9: { ip: '192.168.1.109', subnet: '255.255.255.0', gateway: '192.168.1.1' },
+            10: { ip: '192.168.1.110', subnet: '255.255.255.0', gateway: '192.168.1.1' }
+        };
+
+        // 从URL获取摄像头ID
+        function getCameraIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+
+        // 加载摄像头详情
+        function loadCameraDetails() {
+            const cameraId = getCameraIdFromUrl();
+            if (!cameraId) {
+                alert('未找到摄像头ID');
+                window.location.href = 'camera_management.html';
+                return;
+            }
+
+            const camera = cameras.find(c => c.id == cameraId);
+            if (!camera) {
+                alert('未找到对应摄像头');
+                window.location.href = 'camera_management.html';
+                return;
+            }
+
+            // 填充基本信息
+            deviceNameEl.textContent = camera.deviceName;
+            serialNumberEl.textContent = camera.serialNumber;
+            workstationEl.textContent = camera.workstation === 'workstation1' ? '工位1' : camera.workstation === 'workstation2' ? '工位2' : camera.workstation === 'workstation3' ? '工位3' : camera.workstation === 'workstation4' ? '工位4' : '工位5';
+            cameraTypeEl.textContent = camera.type;
+            ipAddressEl.textContent = camera.ipAddress;
+            statusEl.textContent = camera.status === 'online' ? '在线' : camera.status === 'offline' ? '离线' : '警告';
+            statusEl.className = 'font-medium ' + (camera.status === 'online' ? 'text-green-600' : camera.status === 'offline' ? 'text-red-600' : 'text-yellow-600');
+
+            // 填充IP配置
+            const ipConfig = ipConfigurations[cameraId] || { ip: '', subnet: '', gateway: '' };
+            ipConfigEl.value = ipConfig.ip;
+            subnetMaskEl.value = ipConfig.subnet;
+            defaultGatewayEl.value = ipConfig.gateway;
+        }
+
+        // 拍摄图像
+        function captureImage() {
+            const delay = parseInt(delayCaptureEl.value) || 0;
+
+            if (delay > 0) {
+                captureBtn.disabled = true;
+                captureBtn.textContent = `拍摄中(${delay}s)`;
+
+                let countdown = delay;
+                const interval = setInterval(() => {
+                    countdown--;
+                    captureBtn.textContent = `拍摄中(${countdown}s)`;
+
+                    if (countdown <= 0) {
+                        clearInterval(interval);
+                        takePicture();
+                        captureBtn.disabled = false;
+                        captureBtn.innerHTML = '<i class="fa fa-camera mr-2"></i>拍摄图像';
+                    }
+                }, 1000);
+            } else {
+                takePicture();
+            }
+        }
+
+        // 实际拍摄图片
+        function takePicture() {
+            // 这里模拟拍摄，实际应用中应该从摄像头获取图像
+            const timestamp = new Date();
+            const resolution = resolutionEl.value;
+            const width = parseInt(resolution.split('x')[0]);
+            const height = parseInt(resolution.split('x')[1]);
+
+            // 使用picsum.photos作为示例图片源
+            const imageUrl = `https://picsum.photos/${width}/${height}?random=${Date.now()}`;
+
+            // 显示图像
+            cameraImageEl.src = imageUrl;
+            noImageEl.classList.add('hidden');
+            cameraImageEl.classList.remove('hidden');
+            imageInfoEl.classList.remove('hidden');
+            saveImageBtn.disabled = false;
+
+            // 更新图像信息
+            imageResolutionEl.textContent = resolution;
+            imageSizeEl.textContent = `${Math.round(width * height * 0.15 / 1024)} KB`; // 估算大小
+            imageTimestampEl.textContent = timestamp.toLocaleString();
+
+            // 添加到历史记录
+            addToHistory(imageUrl, resolution, timestamp);
+        }
+
+        // 添加到历史记录
+        function addToHistory(imageUrl, resolution, timestamp) {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'relative group cursor-pointer overflow-hidden rounded-md border border-gray-200';
+            historyItem.innerHTML = `
+                <img src="${imageUrl}" alt="Camera capture" class="w-full h-24 object-cover transition-transform duration-300 group-hover:scale-105">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2">
+                    <div class="text-white text-xs">
+                        <div>${resolution}</div>
+                        <div>${timestamp.toLocaleString()}</div>
+                    </div>
+                </div>
+            `;
+
+            // 添加点击事件，点击历史记录项时显示该图片
+            historyItem.addEventListener('click', () => {
+                const img = document.createElement('img');
+                img.onload = function() {
+                    const width = img.width;
+                    const height = img.height;
+                    document.getElementById('cameraImage').src = imageUrl;
+                    document.getElementById('imageResolution').textContent = resolution;
+                    document.getElementById('imageSize').textContent = `${Math.round(width * height * 0.15 / 1024)} KB`;
+                    document.getElementById('imageTimestamp').textContent = timestamp.toLocaleString();
+                    document.getElementById('cameraImage').classList.remove('hidden');
+                    document.getElementById('imageInfo').classList.remove('hidden');
+                };
+                img.src = imageUrl;
+            });
+
+            // 添加到历史记录容器
+            const historyContainer = document.getElementById('historyContainer');
+            if (historyContainer.firstChild) {
+                historyContainer.insertBefore(historyItem, historyContainer.firstChild);
+            } else {
+                historyContainer.appendChild(historyItem);
+            }
+
+            // 限制历史记录数量为10条
+            if (historyContainer.children.length > 10) {
+                historyContainer.removeChild(historyContainer.lastChild);
+            }
+        }
+    </script>
+</body>
+</html>
