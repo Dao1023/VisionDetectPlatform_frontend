@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工业视觉检测平台 - 监控仪表盘</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome图标 -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Tailwind配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E40AF', // 深蓝色作为主色调
+                        secondary: '#3B82F6', // 中蓝色作为次要色调
+                        success: '#10B981', // 绿色表示成功/在线状态
+                        warning: '#F59E0B', // 黄色表示警告
+                        danger: '#EF4444', // 红色表示危险/错误
+                        info: '#64748B', // 灰色表示信息
+                        darkblue: '#0F172A', // 更深的蓝色用于背景
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    }
+                },
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-transition {
+                transition: all 0.3s ease;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .dashboard-grid {
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+                gap: 1.5rem;
+            }
+            @media (max-width: 1024px) {
+                .dashboard-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
+        <nav class="container mx-auto px-4 py-3">
+            <ul class="flex flex-wrap items-center space-x-1 md:space-x-4">
+                <li><a href="#" class="px-3 py-2 text-primary font-medium rounded-md">首页</a></li>
+                <li><a href="#" class="px-3 py-2 text-gray-600 hover:text-primary hover:bg-blue-50 rounded-md transition-all">相机配置</a></li>
+                <li><a href="#" class="px-3 py-2 text-gray-600 hover:text-primary hover:bg-blue-50 rounded-md transition-all">PLC配置</a></li>
+                <li><a href="#" class="px-3 py-2 text-gray-600 hover:text-primary hover:bg-blue-50 rounded-md transition-all">拍摄照片</a></li>
+                <li><a href="#" class="px-3 py-2 text-gray-600 hover:text-primary hover:bg-blue-50 rounded-md transition-all">数据集</a></li>
+                <li><a href="#" class="px-3 py-2 text-gray-600 hover:text-primary hover:bg-blue-50 rounded-md transition-all">模型训练</a></li>
+                <li><a href="#" class="px-3 py-2 text-gray-600 hover:text-primary hover:bg-blue-50 rounded-md transition-all">推理任务</a></li>
+                <li><a href="#" class="px-3 py-2 text-gray-600 hover:text-primary hover:bg-blue-50 rounded-md transition-all">运行日志</a></li>
+                <li><a href="#" class="px-3 py-2 text-gray-600 hover:text-primary hover:bg-blue-50 rounded-md transition-all">数据库管理</a></li>
+                <li><a href="#" class="px-3 py-2 text-gray-600 hover:text-primary hover:bg-blue-50 rounded-md transition-all">参数设置</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 pt-20 pb-10">
+        <!-- 统计卡片区域 -->
+        <section class="mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <!-- 今日合格率卡片 -->
+                <div class="bg-white rounded-lg shadow-card p-5 card-transition hover:shadow-card-hover">
+                    <h3 class="text-gray-500 text-sm font-medium mb-1">今日合格率</h3>
+                    <div class="flex items-baseline">
+                        <span class="text-3xl font-bold text-primary mr-2">98.5%</span>
+                        <span class="text-xs text-success flex items-center">
+                            <i class="fa fa-arrow-up mr-1"></i> 比昨日4.9%
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 今日检测数量卡片 -->
+                <div class="bg-white rounded-lg shadow-card p-5 card-transition hover:shadow-card-hover">
+                    <h3 class="text-gray-500 text-sm font-medium mb-1">今日检测数量</h3>
+                    <div class="flex items-baseline">
+                        <span class="text-3xl font-bold text-primary mr-2">1,145</span>
+                        <span class="text-xs text-success flex items-center">
+                            <i class="fa fa-arrow-up mr-1"></i> 比昨日50%
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 不合格数卡片 -->
+                <div class="bg-white rounded-lg shadow-card p-5 card-transition hover:shadow-card-hover">
+                    <h3 class="text-gray-500 text-sm font-medium mb-1">不合格数</h3>
+                    <div class="flex items-baseline">
+                        <span class="text-3xl font-bold text-danger mr-2">15</span>
+                        <span class="text-xs text-success flex items-center">
+                            <i class="fa fa-arrow-down mr-1"></i> 比昨日10%
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 模型训练数量卡片 -->
+                <div class="bg-white rounded-lg shadow-card p-5 card-transition hover:shadow-card-hover">
+                    <h3 class="text-gray-500 text-sm font-medium mb-1">模型训练数量</h3>
+                    <div class="flex items-baseline">
+                        <span class="text-3xl font-bold text-primary mr-2">2个</span>
+                        <span class="text-xs text-success flex items-center">
+                            <i class="fa fa-arrow-up mr-1"></i> 比昨日100%
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 当前任务数卡片 -->
+                <div class="bg-white rounded-lg shadow-card p-5 card-transition hover:shadow-card-hover">
+                    <h3 class="text-gray-500 text-sm font-medium mb-1">当前任务数</h3>
+                    <div class="flex items-baseline">
+                        <span class="text-3xl font-bold text-primary mr-2">8个</span>
+                        <span class="text-xs text-danger flex items-center">
+                            <i class="fa fa-arrow-up mr-1"></i> 比昨日16%
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 主要监控区域 -->
+        <div class="dashboard-grid">
+            <!-- 左侧区域：相机监控和系统日志 -->
+            <div class="space-y-6">
+                <!-- 相机监控区域 -->
+                <section class="bg-white rounded-lg shadow-card p-5">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">相机监控</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- 相机画面 -->
+                        <div class="border border-gray-200 rounded-md overflow-hidden bg-black relative aspect-video">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-white text-xl">相机画面</span>
+                            </div>
+                        </div>
+
+                        <!-- 推理结果画面 -->
+                        <div class="border border-gray-200 rounded-md overflow-hidden bg-black relative aspect-video">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-white text-xl">推理结果画面</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 系统日志区域 -->
+                <section class="bg-white rounded-lg shadow-card p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold text-gray-800">系统日志</h2>
+                        <div class="flex items-center space-x-2">
+                            <button class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
+                                <i class="fa fa-trash-o mr-1"></i> 清空
+                            </button>
+                            <select class="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                <option>全部</option>
+                                <option>错误</option>
+                                <option>警告</option>
+                                <option>信息</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="overflow-y-auto max-h-80 scrollbar-hide">
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <i class="fa fa-exclamation-circle text-danger mt-1 mr-3"></i>
+                                <div>
+                                    <span class="text-sm text-gray-600">16:20:11</span>
+                                    <span class="text-sm">相机信号干扰</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa fa-exclamation-triangle text-warning mt-1 mr-3"></i>
+                                <div>
+                                    <span class="text-sm text-gray-600">16:20:17</span>
+                                    <span class="text-sm">数据库负载增加</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa fa-exclamation-circle text-danger mt-1 mr-3"></i>
+                                <div>
+                                    <span class="text-sm text-gray-600">16:20:26</span>
+                                    <span class="text-sm">检测到产品缺陷</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa fa-exclamation-circle text-danger mt-1 mr-3"></i>
+                                <div>
+                                    <span class="text-sm text-gray-600">16:20:31</span>
+                                    <span class="text-sm">检测到产品缺陷</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa fa-exclamation-triangle text-warning mt-1 mr-3"></i>
+                                <div>
+                                    <span class="text-sm text-gray-600">16:20:51</span>
+                                    <span class="text-sm">相机温度略高</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 右侧区域：当前任务和连接状态 -->
+            <div class="space-y-6">
+                <!-- 当前任务区域 -->
+                <section class="bg-white rounded-lg shadow-card p-5">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">当前任务</h2>
+                    <div class="space-y-4">
+                        <!-- 任务1：产品外观检测 -->
+                        <div class="border border-gray-200 rounded-md p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-medium text-gray-800">产品外观检测</h3>
+                                <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">进行中</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-1">相机: 主摄像头 (CAM-2023001)</p>
+                            <p class="text-sm text-gray-600 mb-3">检测类型: 缺陷检测</p>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 80%"></div>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1 text-right">进度: 80%</div>
+                        </div>
+
+                        <!-- 任务2：尺寸测量 -->
+                        <div class="border border-gray-200 rounded-md p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-medium text-gray-800">尺寸测量</h3>
+                                <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">待执行</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-1">相机: 侧摄像头 (CAM-2023002)</p>
+                            <p class="text-sm text-gray-600 mb-3">检测类型: 尺寸测量</p>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-gray-300 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1 text-right">进度: 0%</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 连接状态区域 -->
+                <section class="bg-white rounded-lg shadow-card p-5">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">连接状态</h2>
+                    <ul class="space-y-3">
+                        <!-- 相机连接 -->
+                        <li class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <i class="fa fa-video-camera text-primary mr-3"></i>
+                                <span class="text-gray-700">相机连接</span>
+                            </div>
+                            <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">4/4 在线</span>
+                        </li>
+
+                        <!-- PLC连接 -->
+                        <li class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <i class="fa fa-plug text-primary mr-3"></i>
+                                <span class="text-gray-700">PLC连接</span>
+                            </div>
+                            <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">已连接</span>
+                        </li>
+
+                        <!-- 数据库 -->
+                        <li class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <i class="fa fa-database text-primary mr-3"></i>
+                                <span class="text-gray-700">数据库</span>
+                            </div>
+                            <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">正常</span>
+                        </li>
+
+                        <!-- 网络状态 -->
+                        <li class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <i class="fa fa-wifi text-primary mr-3"></i>
+                                <span class="text-gray-700">网络状态</span>
+                            </div>
+                            <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">信号弱</span>
+                        </li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-4">
+        <div class="container mx-auto px-4 text-center text-sm text-gray-600">
+            © 2023 工业视觉检测平台 - 技术支持热线：400-888-8888
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 简单的交互功能实现
+        document.addEventListener('DOMContentLoaded', function() {
+            // 模拟相机画面刷新
+            function updateCameraViews() {
+                // 在实际应用中，这里会从后端获取实时画面数据
+                console.log('相机画面已刷新');
+            }
+
+            // 定时刷新相机画面
+            setInterval(updateCameraViews, 5000);
+
+            // 任务进度更新模拟
+            function updateTaskProgress() {
+                const progressBars = document.querySelectorAll('.bg-blue-600');
+                progressBars.forEach(bar => {
+                    const currentWidth = parseInt(bar.style.width);
+                    if (currentWidth < 100) {
+                        bar.style.width = (currentWidth + Math.random() * 5) + '%';
+                        // 更新进度文本
+                        const progressText = bar.parentElement.nextElementSibling;
+                        if (progressText) {
+                            progressText.textContent = `进度: ${Math.floor(parseInt(bar.style.width))}%`;
+                        }
+                    }
+                });
+            }
+
+            // 定时更新任务进度
+            setInterval(updateTaskProgress, 3000);
+
+            // 模拟添加新日志
+            function addNewLog() {
+                const logTypes = [
+                    { icon: 'fa-exclamation-circle', color: 'text-danger', message: '检测到产品缺陷' },
+                    { icon: 'fa-exclamation-triangle', color: 'text-warning', message: '相机温度略高' },
+                    { icon: 'fa-info-circle', color: 'text-info', message: '系统正常运行中' }
+                ];
+                
+                const logContainer = document.querySelector('.overflow-y-auto ul');
+                if (logContainer) {
+                    const now = new Date();
+                    const hours = now.getHours().toString().padStart(2, '0');
+                    const minutes = now.getMinutes().toString().padStart(2, '0');
+                    const seconds = now.getSeconds().toString().padStart(2, '0');
+                    const timeString = `${hours}:${minutes}:${seconds}`;
+                    
+                    const randomLog = logTypes[Math.floor(Math.random() * logTypes.length)];
+                    
+                    const newLog = document.createElement('li');
+                    newLog.className = 'flex items-start';
+                    newLog.innerHTML = `
+                        <i class="fa ${randomLog.icon} ${randomLog.color} mt-1 mr-3"></i>
+                        <div>
+                            <span class="text-sm text-gray-600">${timeString}</span>
+                            <span class="text-sm">${randomLog.message}</span>
+                        </div>
+                    `;
+                    
+                    logContainer.insertBefore(newLog, logContainer.firstChild);
+                    
+                    // 限制日志数量
+                    if (logContainer.children.length > 20) {
+                        logContainer.removeChild(logContainer.lastChild);
+                    }
+                }
+            }
+
+            // 定时添加新日志
+            setInterval(addNewLog, 15000);
+
+            // 清空日志按钮功能
+            const clearLogBtn = document.querySelector('button:has(.fa-trash-o)');
+            if (clearLogBtn) {
+                clearLogBtn.addEventListener('click', function() {
+                    const logContainer = document.querySelector('.overflow-y-auto ul');
+                    if (logContainer) {
+                        logContainer.innerHTML = '';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

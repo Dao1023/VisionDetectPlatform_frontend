@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工厂图片管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <style>
+        .preview-image {
+            max-height: 80vh;
+            max-width: 90vw;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        .thumbnail {
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .thumbnail:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 顶部导航栏 -->
+    <nav class="bg-blue-600 text-white shadow-md">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="text-xl font-bold">工厂图片管理系统</div>
+            <div class="flex space-x-4">
+                <a href="home.html" class="hover:text-blue-200">首页</a>
+                <a href="camera_management.html" class="hover:text-blue-200">摄像头管理</a>
+                <a href="#" class="font-bold border-b-2 border-white pb-1">图片管理</a>
+                <a href="plc_management.html" class="hover:text-blue-200">PLC管理</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区 -->
+    <div class="container mx-auto px-4 py-6">
+        <h1 class="text-2xl font-bold mb-6 text-gray-800">图片管理</h1>
+
+        <!-- 筛选区域 -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label for="source-filter" class="block text-sm font-medium text-gray-700 mb-1">来源筛选</label>
+                    <select id="source-filter" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="all">全部来源</option>
+                        <option value="camera1">摄像头1</option>
+                        <option value="camera2">摄像头2</option>
+                        <option value="camera3">摄像头3</option>
+                        <option value="camera4">摄像头4</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="plc-filter" class="block text-sm font-medium text-gray-700 mb-1">PLC筛选</label>
+                    <select id="plc-filter" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="all">全部PLC</option>
+                        <option value="plc1">PLC-1</option>
+                        <option value="plc2">PLC-2</option>
+                        <option value="plc3">PLC-3</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="date-filter" class="block text-sm font-medium text-gray-700 mb-1">日期筛选</label>
+                    <input type="date" id="date-filter" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-end">
+                    <button id="filter-btn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        筛选
+                    </button>
+                </div>
+            </div>
+            <div class="mt-4 flex justify-between items-center">
+                <div class="text-sm text-gray-600" id="filter-result-count">共 12 张图片</div>
+                <div>
+                    <button id="reset-filter" class="text-blue-600 hover:text-blue-800 focus:outline-none mr-4">重置筛选</button>
+                    <button id="export-btn" class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        导出选中
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图片表格 -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+            <div class="table-container">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <input type="checkbox" id="select-all" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">图片</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">文件名</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">来源</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PLC信息</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">拍摄时间</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="image-table-body">
+                        <!-- 表格数据将通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 分页控件 -->
+        <div class="flex justify-between items-center">
+            <div class="text-sm text-gray-600">显示 1 至 10 条，共 12 条</div>
+            <div class="flex space-x-1">
+                <button class="px-3 py-1 border border-gray-300 rounded-md bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>上一页</button>
+                <button class="px-3 py-1 border border-blue-500 rounded-md bg-blue-500 text-white hover:bg-blue-600">1</button>
+                <button class="px-3 py-1 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50">2</button>
+                <button class="px-3 py-1 border border-gray-300 rounded-md bg-white text-gray-500 hover:bg-gray-50">下一页</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片预览模态框 -->
+    <div id="preview-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full p-4 relative">
+            <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-2/3 p-4 flex justify-center">
+                    <img id="preview-image" src="" alt="预览图片" class="preview-image rounded-md shadow-md">
+                </div>
+                <div class="md:w-1/3 p-4 border-t md:border-t-0 md:border-l border-gray-200">
+                    <h3 id="preview-title" class="text-lg font-bold text-gray-900 mb-2"></h3>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <p><span class="font-medium">来源:</span> <span id="preview-source"></span></p>
+                        <p><span class="font-medium">PLC信息:</span> <span id="preview-plc"></span></p>
+                        <p><span class="font-medium">拍摄时间:</span> <span id="preview-time"></span></p>
+                        <p><span class="font-medium">状态:</span> <span id="preview-status"></span></p>
+                        <p><span class="font-medium">文件大小:</span> <span id="preview-size"></span></p>
+                    </div>
+                    <div class="mt-4 flex space-x-2">
+                        <button class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            下载图片
+                        </button>
+                        <button class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                            标记为已处理
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟图片数据
+        const images = [
+            {
+                id: 1,
+                filename: 'image1.jpg',
+                source: 'camera1',
+                sourceName: '摄像头1 (生产线A)',
+                plc: 'plc1',
+                plcName: 'PLC-1 (主控制器)',
+                timestamp: '2023-06-15 10:30:25',
+                status: '未处理',
+                size: '2.4 MB',
+                thumbnail: 'https://via.placeholder.com/100x100/3498db/ffffff?text=Image+1',
+                fullsize: 'https://via.placeholder.com/800x600/3498db/ffffff?text=Image+1'
+            },
+            {
+                id: 2,
+                filename: 'image2.jpg',
+                source: 'camera2',
+                sourceName: '摄像头2 (生产线B)',
+                plc: 'plc2',
+                plcName: 'PLC-2 (包装线)',
+                timestamp: '2023-06-15 10:35:12',
+                status: '已处理',
+                size: '3.1 MB',
+                thumbnail: 'https://via.placeholder.com/100x100/2ecc71/ffffff?text=Image+2',
+                fullsize: 'https://via.placeholder.com/800x600/2ecc71/ffffff?text=Image+2'
+            },
+            {
+                id: 3,
+                filename: 'image3.jpg',
+                source: 'camera3',
+                sourceName: '摄像头3 (质检区)',
+                plc: 'plc3',
+                plcName: 'PLC-3 (质检系统)',
+                timestamp: '2023-06-15 11:02:47',
+                status: '异常',
+                size: '1.8 MB',
+                thumbnail: 'https://via.placeholder.com/100x100/e74c3c/ffffff?text=Image+3',
+                fullsize: 'https://via.placeholder.com/800x600/e74c3c/ffffff?text=Image+3'
+            },
+            {
+                id: 4,
+                filename: 'image4.jpg',
+                source: 'camera1',
+                sourceName: '摄像头1 (生产线A)',
+                plc: 'plc1',
+                plcName: 'PLC-1 (主控制器)',
+                timestamp: '2023-06-15 11:15:30',
+                status: '未处理',
+                size: '2.7 MB',
+                thumbnail: 'https://via.placeholder.com/100x100/9b59b6/ffffff?text=Image+4',
+                fullsize: 'https://via.placeholder.com/800x600/9b59b6/ffffff?text=Image+4'
+            },
+            {
+                id: 5,
+                filename: 'image5.jpg',
+                source: 'camera4',
+                sourceName: '摄像头4 (仓库入口)',
+                plc: 'plc2',
+                plcName: 'PLC-2 (包装线)',
+                timestamp: '2023-06-15 12:05:18',
+                status: '已处理',
+                size: '2.2 MB',
+                thumbnail: 'https://via.placeholder.com/100x100/f1c40f/ffffff?text=Image+5',
+                fullsize: 'https://via.placeholder.com/800x600/f1c40f/ffffff?text=Image+5'
+            },
+            {
+                id: 6,
+                filename: 'image6.jpg',
+                source: 'camera2',
+                sourceName: '摄像头2 (生产线B)',
+                plc: 'plc2',
+                plcName: 'PLC-2 (包装线)',
+                timestamp: '2023-06-15 13:20:45',
+                status: '未处理',
+                size: '3.5 MB',
+                thumbnail: 'https://via.placeholder.com/100x100/e67e22/ffffff?text=Image+6',
+                fullsize: 'https://via.placeholder.com/800x600/e67e22/ffffff?text=Image+6'
+            },
+            {
+                id: 7,
+                filename: 'image7.jpg',
+                source: 'camera3',
+                sourceName: '摄像头3 (质检区)',
+                plc: 'plc3',
+                plcName: 'PLC-3 (质检系统)',
+                timestamp: '2023-06-15 14:08:22',
+                status: '已处理',
+                size: '1.9 MB',
+                thumbnail: 'https://via.placeholder.com/100x100/1abc9c/ffffff?text=Image+7',
+                fullsize: 'https://via.placeholder.com/800x600/1abc9c/ffffff?text=Image+7'
+            },
+            {
+                id: 8,
+                filename: 'image8.jpg',
+                source: 'camera1',
+                sourceName: '摄像头1 (生产线A)',
+                plc: 'plc1',
+                plcName: 'PLC-1 (主控制器)',
+                timestamp: '2023-06-15 14:30:15',
+                status: '异常',
+                size: '2.8 MB',
+                thumbnail: 'https://via.placeholder.com/100x100/34495e/ffffff?text=Image+8',
+                fullsize: 'https://via.placeholder.com/800x600/34495e/ffffff?text=Image+8'
+            },
+            {
+                id: 9,
+                filename: 'image9.jpg',
+                source: 'camera4',
+                sourceName: '摄像头4 (仓库入口)',
+                plc: 'plc2',
+                plcName: 'PLC-2 (包装线)',
+                timestamp: '2023-06-15 15:15:33',
+                status: '未处理',
+                size: '2.1 MB',
+                thumbnail: 'https://via.placeholder.com/100x100/d35400/ffffff?text=Image+9',
+                fullsize: 'https://via.placeholder.com/800x600/d35400/ffffff?text=Image+9'
+            },
+            {
+                id: 10,
+                filename: 'image10.jpg',
+                source: 'camera2',
+                sourceName: '摄像头2 (生产线B)',
+                plc: 'plc2',
+                plcName: 'PLC-2 (包装线)',
+                timestamp: '2023-06-15 16:00:20',
+                status: '已处理',
+                size: '3.2 MB',
+                thumbnail: 'https://via.placeholder.com/100x100/27ae60/ffffff?text=Image+10',
+                fullsize: 'https://via.placeholder.com/800x600/27ae60/ffffff?text=Image+10'
+            },
+            {
+                id: 11,
+                filename: 'image11.jpg',
+                source: 'camera3',
+                sourceName: '摄像头3 (质检区)',
+                plc: 'plc3',
+                plcName: 'PLC-3 (质检系统)',
+                timestamp: '2023-06-15 16:45:12',
+                status: '未处理',
+                size: '2.3 MB',
+                thumbnail: 'https://via.placeholder.com/100x100/8e44ad/ffffff?text=Image+11',
+                fullsize: 'https://via.placeholder.com/800x600/8e44ad/ffffff?text=Image+11'
+            },
+            {
+                id: 12,
+                filename: 'image12.jpg',
+                source: 'camera1',
+                sourceName: '摄像头1 (生产线A)',
+                plc: 'plc1',
+                plcName: 'PLC-1 (主控制器)',
+                timestamp: '2023-06-15 17:30:05',
+                status: '已处理',
+                size: '2.9 MB',
+                thumbnail: 'https://via.placeholder.com/100x100/16a085/ffffff?text=Image+12',
+                fullsize: 'https://via.placeholder.com/800x600/16a085/ffffff?text=Image+12'
+            }
+        ];
+
+        // DOM元素
+        const imageTableBody = document.getElementById('image-table-body');
+        const previewModal = document.getElementById('preview-modal');
+        const previewImage = document.getElementById('preview-image');
+        const previewTitle = document.getElementById('preview-title');
+        const previewSource = document.getElementById('preview-source');
+        const previewPlc = document.getElementById('preview-plc');
+        const previewTime = document.getElementById('preview-time');
+        const previewStatus = document.getElementById('preview-status');
+        const previewSize = document.getElementById('preview-size');
+        const closeModal = document.getElementById('close-modal');
+        const filterBtn = document.getElementById('filter-btn');
+        const resetFilter = document.getElementById('reset-filter');
+        const selectAll = document.getElementById('select-all');
+        const filterResultCount = document.getElementById('filter-result-count');
+
+        // 渲染表格数据
+        function renderTable(data) {
+            imageTableBody.innerHTML = '';
+            data.forEach(image => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+
+                // 状态样式
+                let statusClass = '';
+                if (image.status === '未处理') statusClass = 'bg-yellow-100 text-yellow-800';
+                else if (image.status === '已处理') statusClass = 'bg-green-100 text-green-800';
+                else if (image.status === '异常') statusClass = 'bg-red-100 text-red-800';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="checkbox" class="image-checkbox rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" data-id="${image.id}">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <img src="${image.thumbnail}" alt="${image.filename}" class="thumbnail h-16 w-16 rounded-md object-cover" data-id="${image.id}">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${image.filename}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${image.sourceName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${image.plcName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${image.timestamp}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">${image.status}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button class="text-blue-600 hover:text-blue-900 mr-3 view-btn" data-id="${image.id}">查看</button>
+                        <button class="text-green-600 hover:text-green-900 mr-3 process-btn" data-id="${image.id}">处理</button>
+                        <button class="text-red-600 hover:text-red-900 delete-btn" data-id="${image.id}">删除</button>
+                    </td>
+                `;
+
+                imageTableBody.appendChild(row);
+            });
+
+            // 更新筛选结果计数
+            filterResultCount.textContent = `共 ${data.length} 张图片`;
+
+            // 绑定缩略图点击事件
+            document.querySelectorAll('.thumbnail').forEach(thumbnail => {
+                thumbnail.addEventListener('click', () => {
+                    const imageId = parseInt(thumbnail.getAttribute('data-id'));
+                    openPreview(imageId);
+                });
+            });
+
+            // 绑定查看按钮点击事件
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const imageId = parseInt(btn.getAttribute('data-id'));
+                    openPreview(imageId);
+                });
+            });
+
+            // 绑定处理按钮点击事件
+            document.querySelectorAll('.process-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const imageId = parseInt(btn.getAttribute('data-id'));
+                    processImage(imageId);
+                });
+            });
+
+            // 绑定删除按钮点击事件
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const imageId = parseInt(btn.getAttribute('data-id'));
+                    deleteImage(imageId);
+                });
+            });
+
+            // 绑定复选框点击事件
+            document.querySelectorAll('.image-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    updateSelectAll();
+                });
+            });
+        }
+
+        // 打开图片预览
+        function openPreview(imageId) {
+            const image = images.find(img => img.id === imageId);
+            if (image) {
+                previewImage.src = image.fullsize;
+                previewTitle.textContent = image.filename;
+                previewSource.textContent = image.sourceName;
+                previewPlc.textContent = image.plcName;
+                previewTime.textContent = image.timestamp;
+                previewStatus.textContent = image.status;
+                previewSize.textContent = image.size;
+                previewModal.classList.remove('hidden');
+            }
+        }
+
+        // 关闭预览
+        function closePreview() {
+            previewModal.classList.add('hidden');
+        }
+
+        // 处理图片
+        function processImage(imageId) {
+            const image = images.find(img => img.id === imageId);
+            if (image && image.status !== '已处理') {
+                image.status = '已处理';
+                renderTable(images);
+                alert(`图片 ${image.filename} 已标记为已处理`);
+            }
+        }
+
+        // 删除图片
+        function deleteImage(imageId) {
+            if (confirm('确定要删除这张图片吗？')) {
+                const index = images.findIndex(img => img.id === imageId);
+                if (index !== -1) {
+                    const deletedImage = images.splice(index, 1);
+                    renderTable(images);
+                    alert(`图片 ${deletedImage[0].filename} 已删除`);
+                }
+            }
+        }
+
+        // 筛选图片
+        function filterImages() {
+            const sourceFilter = document.getElementById('source-filter').value;
+            const plcFilter = document.getElementById('plc-filter').value;
+            const dateFilter = document.getElementById('date-filter').value;
+
+            let filteredImages = [...images];
+
+            if (sourceFilter !== 'all') {
+                filteredImages = filteredImages.filter(img => img.source === sourceFilter);
+            }
+
+            if (plcFilter !== 'all') {
+                filteredImages = filteredImages.filter(img => img.plc === plcFilter);
+            }
+
+            if (dateFilter) {
+                filteredImages = filteredImages.filter(img => img.timestamp.startsWith(dateFilter));
+            }
+
+            renderTable(filteredImages);
+        }
+
+        // 重置筛选
+        function resetFilters() {
+            document.getElementById('source-filter').value = 'all';
+            document.getElementById('plc-filter').value = 'all';
+            document.getElementById('date-filter').value = '';
+            renderTable(images);
+        }
+
+        // 全选/取消全选
+        function toggleSelectAll() {
+            const isChecked = selectAll.checked;
+            document.querySelectorAll('.image-checkbox').forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+        }
+
+        // 更新全选复选框状态
+        function updateSelectAll() {
+            const checkboxes = document.querySelectorAll('.image-checkbox');
+            const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+            selectAll.checked = allChecked;
+        }
+
+        // 导出选中的图片
+        function exportSelected() {
+            const selectedCheckboxes = document.querySelectorAll('.image-checkbox:checked');
+            if (selectedCheckboxes.length === 0) {
+                alert('请先选择要导出的图片');
+                return;
+            }
+
+            const selectedIds = Array.from(selectedCheckboxes).map(checkbox => parseInt(checkbox.getAttribute('data-id')));
+            const selectedImages = images.filter(img => selectedIds.includes(img.id));
+
+            alert(`已选择 ${selectedImages.length} 张图片，准备导出...`);
+            // 实际应用中，这里会实现导出功能
+        }
+
+        // 绑定事件
+        closeModal.addEventListener('click', closePreview);
+        filterBtn.addEventListener('click', filterImages);
+        resetFilter.addEventListener('click', resetFilters);
+        selectAll.addEventListener('change', toggleSelectAll);
+        document.getElementById('export-btn').addEventListener('click', exportSelected);
+
+        // 点击模态框外部关闭预览
+        previewModal.addEventListener('click', (e) => {
+            if (e.target === previewModal) {
+                closePreview();
+            }
+        });
+
+        // 初始化表格
+        renderTable(images);
+    </script>
+</body>
+</html>
